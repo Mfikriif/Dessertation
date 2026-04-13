@@ -3,12 +3,12 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
-require('dotenv').config();
+require("dotenv").config();
 
 const app = express();
 
 // IMPORT ROUTE
-const authRoutes = require('./routes/auth/authRoutes');
+const authRoutes = require("./modules/auth/auth.routes");
 
 app.use(cors());
 app.use(helmet());
@@ -17,19 +17,18 @@ app.use(express.json());
 
 // API HEALTH CHECK
 app.get("/api/health", (req, res) => {
-    res.status(200).json({
-        message: "API is running",
-        status: "Active",
-    });
+  res.status(200).json({
+    message: "API is running",
+    status: "Active",
+  });
 });
 
 // API ROUTE
-app.use('/api/auth', authRoutes);
-
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 
 module.exports = app;

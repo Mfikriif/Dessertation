@@ -10,17 +10,17 @@
 //    node migrate.js --rollback → hapus semua tabel
 // ============================================================
 
-const mysql = require('mysql2/promise');
+const mysql = require("mysql2/promise");
 
 // ------------------------------------------------------------
 //  Konfigurasi koneksi — sesuaikan dengan environment kamu
 // ------------------------------------------------------------
 const DB_CONFIG = {
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || "localhost",
   port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'dessertation_db',
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "dessertation_db",
   multipleStatements: true,
 };
 
@@ -28,7 +28,6 @@ const DB_CONFIG = {
 //  DDL — urutan penting karena ada foreign key
 // ------------------------------------------------------------
 const MIGRATE_QUERIES = [
-
   // 1. pengguna
   `CREATE TABLE IF NOT EXISTS pengguna (
     id_pengguna  CHAR(36)     NOT NULL,
@@ -53,6 +52,7 @@ const MIGRATE_QUERIES = [
   `CREATE TABLE IF NOT EXISTS kategori (
     id_kategori   CHAR(36)     NOT NULL,
     nama_kategori VARCHAR(100) NOT NULL,
+    kode_kategori VARCHAR(10)  NOT NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_kategori)
   ) ENGINE=InnoDB`,
@@ -71,7 +71,23 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
-  // 5. bahan_baku
+  // 5. stok_outlet
+  `CREATE TABLE IF NOT EXISTS stok_outlet (
+    id_stok_outlet CHAR(36) NOT NULL,
+    id_produk   CHAR(36)       NOT NULL,
+    id_outlet   CHAR(36)       NOT NULL,
+    jumlah_stok DECIMAL(12,2)  NOT NULL,
+    created_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_stok_outlet),
+    CONSTRAINT fk_stok_outlet_produk
+      FOREIGN KEY (id_produk) REFERENCES produk (id_produk)
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_stok_outlet_outlet
+      FOREIGN KEY (id_outlet) REFERENCES outlet (id_outlet)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+  ) ENGINE=InnoDB`,
+
+  // 6. bahan_baku
   `CREATE TABLE IF NOT EXISTS bahan_baku (
     id_bahan_baku CHAR(36)     NOT NULL,
     nama_bahan    VARCHAR(150) NOT NULL,
@@ -80,7 +96,7 @@ const MIGRATE_QUERIES = [
     PRIMARY KEY (id_bahan_baku)
   ) ENGINE=InnoDB`,
 
-  // 6. stok_bahan_baku (1:1 dengan bahan_baku)
+  // 7. stok_bahan_baku (1:1 dengan bahan_baku)
   `CREATE TABLE IF NOT EXISTS stok_bahan_baku (
     id_stok_bb    CHAR(36)      NOT NULL,
     id_bahan_baku CHAR(36)      NOT NULL UNIQUE,
@@ -93,7 +109,7 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
-  // 7. pengeluaran
+  // 8. pengeluaran
   `CREATE TABLE IF NOT EXISTS pengeluaran (
     id_pengeluaran CHAR(36)      NOT NULL,
     id_pengguna    CHAR(36)      NOT NULL,
@@ -107,7 +123,7 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
-  // 8. penggunaan_bahan_baku
+  // 9. penggunaan_bahan_baku
   `CREATE TABLE IF NOT EXISTS penggunaan_bahan_baku (
     id_penggunaan    CHAR(36)      NOT NULL,
     id_bahan_baku    CHAR(36)      NOT NULL,
@@ -125,7 +141,7 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
-  // 9. laporan
+  // 10. laporan
   `CREATE TABLE IF NOT EXISTS laporan (
     id_laporan        CHAR(36)      NOT NULL,
     id_outlet         CHAR(36),
@@ -150,7 +166,7 @@ const MIGRATE_QUERIES = [
       )
   ) ENGINE=InnoDB`,
 
-  // 10. laporan_pengeluaran (tabel penghubung)
+  // 11. laporan_pengeluaran (tabel penghubung)
   `CREATE TABLE IF NOT EXISTS laporan_pengeluaran (
     id_laporan     CHAR(36) NOT NULL,
     id_pengeluaran CHAR(36) NOT NULL,
@@ -168,23 +184,23 @@ const MIGRATE_QUERIES = [
 //  Rollback — urutan terbalik karena ada foreign key
 // ------------------------------------------------------------
 const ROLLBACK_QUERIES = [
-  'DROP TABLE IF EXISTS laporan_pengeluaran',
-  'DROP TABLE IF EXISTS laporan',
-  'DROP TABLE IF EXISTS penggunaan_bahan_baku',
-  'DROP TABLE IF EXISTS pengeluaran',
-  'DROP TABLE IF EXISTS stok_bahan_baku',
-  'DROP TABLE IF EXISTS bahan_baku',
-  'DROP TABLE IF EXISTS produk',
-  'DROP TABLE IF EXISTS kategori',
-  'DROP TABLE IF EXISTS outlet',
-  'DROP TABLE IF EXISTS pengguna',
+  "DROP TABLE IF EXISTS laporan_pengeluaran",
+  "DROP TABLE IF EXISTS laporan",
+  "DROP TABLE IF EXISTS penggunaan_bahan_baku",
+  "DROP TABLE IF EXISTS pengeluaran",
+  "DROP TABLE IF EXISTS stok_bahan_baku",
+  "DROP TABLE IF EXISTS bahan_baku",
+  "DROP TABLE IF EXISTS produk",
+  "DROP TABLE IF EXISTS stok_outlet",
+  "DROP TABLE IF EXISTS kategori",
+  "DROP TABLE IF EXISTS outlet",
+  "DROP TABLE IF EXISTS pengguna",
 ];
 
 // ------------------------------------------------------------
 //  Seed — dummy data
 // ------------------------------------------------------------
 const SEED_QUERIES = [
-
   // pengguna
   `INSERT IGNORE INTO pengguna (id_pengguna, nama, email, password, role) VALUES
     ('usr-001', 'Budi Santoso',    'budi@owner.com',  '$2b$10$hashedpassword1', 'admin'),
@@ -200,11 +216,11 @@ const SEED_QUERIES = [
     ('otl-003', 'Outlet Barat',   'Jl. Panjang No. 88, Jakarta')`,
 
   // kategori
-  `INSERT IGNORE INTO kategori (id_kategori, nama_kategori) VALUES
-    ('kat-001', 'Minuman'),
-    ('kat-002', 'Makanan'),
-    ('kat-003', 'Snack'),
-    ('kat-004', 'Paket')`,
+  `INSERT IGNORE INTO kategori (id_kategori, kode_kategori, nama_kategori) VALUES
+    ('kat-001', 'MNM', 'Minuman'),
+    ('kat-002', 'MKN', 'Makanan'),
+    ('kat-003', 'SNK', 'Snack'),
+    ('kat-004', 'PKT', 'Paket')`,
 
   // produk
   `INSERT IGNORE INTO produk (id_produk, id_kategori, nama_produk, deskripsi, harga) VALUES
@@ -215,6 +231,30 @@ const SEED_QUERIES = [
     ('prd-005', 'kat-002', 'Mie Goreng',          'Mie goreng pedas level 1-3',        22000),
     ('prd-006', 'kat-003', 'Kentang Goreng',      'Kentang goreng crispy',             15000),
     ('prd-007', 'kat-004', 'Paket Hemat A',       'Nasi goreng + Es teh + Snack',      45000)`,
+
+  // stok_outlet
+  `INSERT IGNORE INTO stok_outlet (id_stok_outlet, id_produk, id_outlet, jumlah_stok) VALUES
+    ('stok-001', 'prd-001', 'otl-001', 50),
+    ('stok-002', 'prd-002', 'otl-001', 80),
+    ('stok-003', 'prd-003', 'otl-001', 30),
+    ('stok-004', 'prd-004', 'otl-001', 40),
+    ('stok-005', 'prd-005', 'otl-001', 40),
+    ('stok-006', 'prd-006', 'otl-001', 60),
+    ('stok-007', 'prd-007', 'otl-001', 25),
+    ('stok-008', 'prd-001', 'otl-002', 35),
+    ('stok-009', 'prd-002', 'otl-002', 60),
+    ('stok-010', 'prd-003', 'otl-002', 20),
+    ('stok-011', 'prd-004', 'otl-002', 30),
+    ('stok-012', 'prd-005', 'otl-002', 30),
+    ('stok-013', 'prd-006', 'otl-002', 45),
+    ('stok-014', 'prd-007', 'otl-002', 15),
+    ('stok-015', 'prd-001', 'otl-003', 25),
+    ('stok-016', 'prd-002', 'otl-003', 50),
+    ('stok-017', 'prd-003', 'otl-003', 15),
+    ('stok-018', 'prd-004', 'otl-003', 20),
+    ('stok-019', 'prd-005', 'otl-003', 20),
+    ('stok-020', 'prd-006', 'otl-003', 30),
+    ('stok-021', 'prd-007', 'otl-003', 10)`,
 
   // bahan_baku
   `INSERT IGNORE INTO bahan_baku (id_bahan_baku, nama_bahan, satuan) VALUES
@@ -300,46 +340,56 @@ const SEED_QUERIES = [
 async function createDatabase(connection) {
   await connection.query(
     `CREATE DATABASE IF NOT EXISTS \`${DB_CONFIG.database}\`
-     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
   );
   await connection.query(`USE \`${DB_CONFIG.database}\``);
   console.log(`✓ Database "${DB_CONFIG.database}" siap`);
 }
 
 async function migrate(connection) {
-  console.log('\n[ MIGRASI TABEL ]');
+  console.log("\n[ MIGRASI TABEL ]");
   for (const sql of MIGRATE_QUERIES) {
     // Ambil nama tabel dari query untuk log yang informatif
     const match = sql.match(/CREATE TABLE IF NOT EXISTS (\w+)/i);
-    const tableName = match ? match[1] : '?';
+    const tableName = match ? match[1] : "?";
     await connection.query(sql);
     console.log(`  ✓ Tabel "${tableName}" berhasil dibuat`);
   }
 }
 
 async function seed(connection) {
-  console.log('\n[ SEED DUMMY DATA ]');
+  console.log("\n[ SEED DUMMY DATA ]");
   const labels = [
-    'pengguna', 'outlet', 'kategori', 'produk',
-    'bahan_baku', 'stok_bahan_baku', 'pengeluaran',
-    'penggunaan_bahan_baku', 'laporan', 'laporan_pengeluaran',
+    "pengguna",
+    "outlet",
+    "kategori",
+    "produk",
+    "stok_outlet",
+    "bahan_baku",
+    "stok_bahan_baku",
+    "pengeluaran",
+    "penggunaan_bahan_baku",
+    "laporan",
+    "laporan_pengeluaran",
   ];
   for (let i = 0; i < SEED_QUERIES.length; i++) {
     const [result] = await connection.query(SEED_QUERIES[i]);
-    console.log(`  ✓ Seed "${labels[i]}" — ${result.affectedRows} baris dimasukkan`);
+    console.log(
+      `  ✓ Seed "${labels[i]}" — ${result.affectedRows} baris dimasukkan`,
+    );
   }
 }
 
 async function rollback(connection) {
-  console.log('\n[ ROLLBACK — HAPUS SEMUA TABEL ]');
-  await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+  console.log("\n[ ROLLBACK — HAPUS SEMUA TABEL ]");
+  await connection.query("SET FOREIGN_KEY_CHECKS = 0");
   for (const sql of ROLLBACK_QUERIES) {
     const match = sql.match(/DROP TABLE IF EXISTS (\w+)/i);
-    const tableName = match ? match[1] : '?';
+    const tableName = match ? match[1] : "?";
     await connection.query(sql);
     console.log(`  ✓ Tabel "${tableName}" dihapus`);
   }
-  await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+  await connection.query("SET FOREIGN_KEY_CHECKS = 1");
 }
 
 // ------------------------------------------------------------
@@ -347,9 +397,9 @@ async function rollback(connection) {
 // ------------------------------------------------------------
 async function main() {
   const args = process.argv.slice(2);
-  const doMigrate = args.includes('--migrate') || args.length === 0;
-  const doSeed = args.includes('--seed') || args.length === 0;
-  const doRollback = args.includes('--rollback');
+  const doMigrate = args.includes("--migrate") || args.length === 0;
+  const doSeed = args.includes("--seed") || args.length === 0;
+  const doRollback = args.includes("--rollback");
 
   // Koneksi awal tanpa database (untuk CREATE DATABASE)
   const { database, ...configWithoutDb } = DB_CONFIG;
@@ -367,16 +417,16 @@ async function main() {
   try {
     if (doRollback) {
       await rollback(connection);
-      console.log('\n✅ Rollback selesai.\n');
+      console.log("\n✅ Rollback selesai.\n");
       return;
     }
 
     if (doMigrate) await migrate(connection);
     if (doSeed) await seed(connection);
 
-    console.log('\n✅ Selesai.\n');
+    console.log("\n✅ Selesai.\n");
   } catch (err) {
-    console.error('\n❌ Error:', err.message);
+    console.error("\n❌ Error:", err.message);
     process.exit(1);
   } finally {
     await connection.end();

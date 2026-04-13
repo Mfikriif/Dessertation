@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../../config/db");
 
 class Pengguna {
   constructor(id_pengguna, nama, email, password, role) {

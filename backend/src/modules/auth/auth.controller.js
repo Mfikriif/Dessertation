@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const Pengguna = require("../../models/penggunaModel");
+const Pengguna = require("../pengguna/pengguna.model");
 require("dotenv").config();
 
 const register = async (req, res) => {
@@ -62,7 +62,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id_pengguna: pengguna.id_pengguna, role: pengguna.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "5h" },
     );
     res.json({
       message: "Login berhasil",
