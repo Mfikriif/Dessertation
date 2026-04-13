@@ -1,4 +1,4 @@
-# Backend Project
+# Final Project
 
 Ini adalah backend project berbasis **Node.js** dan **Express** dengan menggunakan database **MySQL**. Project ini dibuat untuk melayani RESTful API.
 
