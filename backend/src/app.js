@@ -2,13 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 
 require("dotenv").config();
 
 const app = express();
+app.use(cookieParser());
 
 // IMPORT ROUTE
 const authRoutes = require("./modules/auth/auth.routes");
+const penggunaRoutes = require("./modules/pengguna/pengguna.routes");
+const produkRoutes = require("./modules/produk/produk.routes");
+const bahanBakuRoutes = require("./modules/Bahanbaku/bahanbaku.routes");
 
 app.use(cors());
 app.use(helmet());
@@ -25,6 +30,9 @@ app.get("/api/health", (req, res) => {
 
 // API ROUTE
 app.use("/api/auth", authRoutes);
+app.use("/api/pengguna", penggunaRoutes);
+app.use("/api/produk", produkRoutes);
+app.use("/api/bahan-baku", bahanBakuRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

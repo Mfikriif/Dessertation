@@ -11,6 +11,10 @@ const register = async (req, res) => {
     return res.status(400).json({ message: "Semua field wajib diisi" });
   }
 
+  if (role !== "admin" && role !== "kasir" && role !== "staff_admin") {
+    return res.status(400).json({ message: "Role tidak valid" });
+  }
+
   try {
     const pengguna = await Pengguna.findByEmail(email);
     if (pengguna) {
@@ -64,6 +68,14 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "5h" },
     );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 5 * 60 * 60 * 1000,
+    });
+
     res.json({
       message: "Login berhasil",
       status: "success",
@@ -81,4 +93,17 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const logout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    return res.status(200).json({
+      message: "Logout berhasil",
+      status: "success",
+    });
+  } catch (error) {
+    console.error("Error logOut:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { register, login, logout };
