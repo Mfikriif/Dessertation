@@ -51,34 +51,36 @@ const MIGRATE_QUERIES = [
   // 3. kategori
   `CREATE TABLE IF NOT EXISTS kategori (
     id_kategori   CHAR(36)     NOT NULL,
+    kode_kategori VARCHAR(10)  NOT NULL UNIQUE,
     nama_kategori VARCHAR(100) NOT NULL,
-    kode_kategori VARCHAR(10)  NOT NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_kategori)
   ) ENGINE=InnoDB`,
 
   // 4. produk
   `CREATE TABLE IF NOT EXISTS produk (
-    id_produk   CHAR(36)       NOT NULL,
-    id_kategori CHAR(36)       NOT NULL,
-    nama_produk VARCHAR(150)   NOT NULL,
+    id_produk   CHAR(36)      NOT NULL,
+    id_kategori CHAR(36)      NOT NULL,
+    nama_produk VARCHAR(150)  NOT NULL,
     deskripsi   TEXT,
-    harga       DECIMAL(12,2)  NOT NULL,
-    created_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    harga       DECIMAL(12,2) NOT NULL,
+    created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_produk),
     CONSTRAINT fk_produk_kategori
       FOREIGN KEY (id_kategori) REFERENCES kategori (id_kategori)
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
-  // 5. stok_outlet
+  // 5. stok_outlet (stok produk per outlet — relasi Produk * ←→ * Outlet)
   `CREATE TABLE IF NOT EXISTS stok_outlet (
-    id_stok_outlet CHAR(36) NOT NULL,
-    id_produk   CHAR(36)       NOT NULL,
-    id_outlet   CHAR(36)       NOT NULL,
-    jumlah_stok DECIMAL(12,2)  NOT NULL,
-    created_at  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_stok_outlet CHAR(36)      NOT NULL,
+    id_produk      CHAR(36)      NOT NULL,
+    id_outlet      CHAR(36)      NOT NULL,
+    jumlah_stok    DECIMAL(12,2) NOT NULL DEFAULT 0,
+    updated_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                 ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id_stok_outlet),
+    CONSTRAINT uq_stok_outlet UNIQUE (id_produk, id_outlet),
     CONSTRAINT fk_stok_outlet_produk
       FOREIGN KEY (id_produk) REFERENCES produk (id_produk)
       ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -101,6 +103,7 @@ const MIGRATE_QUERIES = [
     id_stok_bb    CHAR(36)      NOT NULL,
     id_bahan_baku CHAR(36)      NOT NULL UNIQUE,
     jumlah_stok   DECIMAL(12,2) NOT NULL DEFAULT 0,
+    stok_minimum  DECIMAL(12,2) NOT NULL DEFAULT 0,
     updated_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
                                 ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id_stok_bb),
@@ -141,17 +144,58 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
-  // 10. laporan
+  // 10. transaksi
+  //     Satu transaksi = satu sesi belanja di satu outlet oleh satu kasir
+  `CREATE TABLE IF NOT EXISTS transaksi (
+    id_transaksi CHAR(36)      NOT NULL,
+    id_outlet    CHAR(36)      NOT NULL,
+    id_pengguna  CHAR(36)      NOT NULL,
+    tanggal      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    total_harga  DECIMAL(14,2) NOT NULL DEFAULT 0,
+    metode_bayar ENUM('tunai','qris','transfer') NOT NULL DEFAULT 'tunai',
+    status       ENUM('selesai','dibatalkan')    NOT NULL DEFAULT 'selesai',
+    created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_transaksi),
+    CONSTRAINT fk_transaksi_outlet
+      FOREIGN KEY (id_outlet) REFERENCES outlet (id_outlet)
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_transaksi_pengguna
+      FOREIGN KEY (id_pengguna) REFERENCES pengguna (id_pengguna)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+  ) ENGINE=InnoDB`,
+
+  // 11. detail_transaksi
+  //     Setiap baris = satu produk dalam satu transaksi
+  //     harga_satuan disimpan sebagai snapshot agar tidak berubah
+  //     jika harga produk diubah di kemudian hari
+  `CREATE TABLE IF NOT EXISTS detail_transaksi (
+    id_detail    CHAR(36)      NOT NULL,
+    id_transaksi CHAR(36)      NOT NULL,
+    id_produk    CHAR(36)      NOT NULL,
+    jumlah       INT UNSIGNED  NOT NULL DEFAULT 1,
+    harga_satuan DECIMAL(12,2) NOT NULL,
+    subtotal     DECIMAL(14,2) NOT NULL,
+    created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_detail),
+    CONSTRAINT fk_detail_transaksi
+      FOREIGN KEY (id_transaksi) REFERENCES transaksi (id_transaksi)
+      ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_detail_produk
+      FOREIGN KEY (id_produk) REFERENCES produk (id_produk)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+  ) ENGINE=InnoDB`,
+
+  // 12. laporan
   `CREATE TABLE IF NOT EXISTS laporan (
-    id_laporan        CHAR(36)      NOT NULL,
+    id_laporan        CHAR(36)       NOT NULL,
     id_outlet         CHAR(36),
-    id_pengguna       CHAR(36)      NOT NULL,
+    id_pengguna       CHAR(36)       NOT NULL,
     jenis_laporan     ENUM('bulanan','tahunan') NOT NULL,
     periode_bulan     TINYINT UNSIGNED,
     periode_tahun     SMALLINT UNSIGNED NOT NULL,
-    total_pendapatan  DECIMAL(16,2) NOT NULL DEFAULT 0,
-    total_pengeluaran DECIMAL(16,2) NOT NULL DEFAULT 0,
-    created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    total_pendapatan  DECIMAL(16,2)  NOT NULL DEFAULT 0,
+    total_pengeluaran DECIMAL(16,2)  NOT NULL DEFAULT 0,
+    created_at        DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_laporan),
     CONSTRAINT fk_laporan_outlet
       FOREIGN KEY (id_outlet) REFERENCES outlet (id_outlet)
@@ -166,7 +210,10 @@ const MIGRATE_QUERIES = [
       )
   ) ENGINE=InnoDB`,
 
-  // 11. laporan_pengeluaran (tabel penghubung)
+  // 13. laporan_pengeluaran (tabel penghubung many-to-many)
+  //     laporan (1) ——(*) laporan_pengeluaran (*——(1) pengeluaran
+  //     Satu laporan mencakup banyak pengeluaran,
+  //     satu pengeluaran bisa masuk ke banyak laporan (bulanan & tahunan)
   `CREATE TABLE IF NOT EXISTS laporan_pengeluaran (
     id_laporan     CHAR(36) NOT NULL,
     id_pengeluaran CHAR(36) NOT NULL,
@@ -186,12 +233,14 @@ const MIGRATE_QUERIES = [
 const ROLLBACK_QUERIES = [
   "DROP TABLE IF EXISTS laporan_pengeluaran",
   "DROP TABLE IF EXISTS laporan",
+  "DROP TABLE IF EXISTS detail_transaksi",
+  "DROP TABLE IF EXISTS transaksi",
   "DROP TABLE IF EXISTS penggunaan_bahan_baku",
   "DROP TABLE IF EXISTS pengeluaran",
   "DROP TABLE IF EXISTS stok_bahan_baku",
   "DROP TABLE IF EXISTS bahan_baku",
-  "DROP TABLE IF EXISTS produk",
   "DROP TABLE IF EXISTS stok_outlet",
+  "DROP TABLE IF EXISTS produk",
   "DROP TABLE IF EXISTS kategori",
   "DROP TABLE IF EXISTS outlet",
   "DROP TABLE IF EXISTS pengguna",
@@ -269,16 +318,16 @@ const SEED_QUERIES = [
     ('bb-009', 'Minyak Goreng', 'liter')`,
 
   // stok_bahan_baku
-  `INSERT IGNORE INTO stok_bahan_baku (id_stok_bb, id_bahan_baku, jumlah_stok) VALUES
-    ('stk-001', 'bb-001', 15.00),
-    ('stk-002', 'bb-002', 40.00),
-    ('stk-003', 'bb-003', 25.00),
-    ('stk-004', 'bb-004', 200.00),
-    ('stk-005', 'bb-005', 30.00),
-    ('stk-006', 'bb-006', 50.00),
-    ('stk-007', 'bb-007', 100.00),
-    ('stk-008', 'bb-008', 20.00),
-    ('stk-009', 'bb-009', 10.00)`,
+  `INSERT IGNORE INTO stok_bahan_baku (id_stok_bb, id_bahan_baku, jumlah_stok, stok_minimum) VALUES
+    ('stk-001', 'bb-001',  15.00,  5.00),
+    ('stk-002', 'bb-002',  40.00, 10.00),
+    ('stk-003', 'bb-003',  25.00,  5.00),
+    ('stk-004', 'bb-004', 200.00, 50.00),
+    ('stk-005', 'bb-005',  30.00,  5.00),
+    ('stk-006', 'bb-006',  50.00, 10.00),
+    ('stk-007', 'bb-007', 100.00, 20.00),
+    ('stk-008', 'bb-008',  20.00,  5.00),
+    ('stk-009', 'bb-009',  10.00,  2.00)`,
 
   // pengeluaran
   `INSERT IGNORE INTO pengeluaran (id_pengeluaran, id_pengguna, tanggal, biaya, deskripsi) VALUES
@@ -301,11 +350,54 @@ const SEED_QUERIES = [
     ('pgu-003', 'bb-003', 'usr-004',  1.50, 'Produksi minuman manis',  '2025-03-02'),
     ('pgu-004', 'bb-005', 'usr-005',  3.00, 'Produksi jus alpukat',    '2025-03-03'),
     ('pgu-005', 'bb-006', 'usr-005',  5.00, 'Produksi nasi goreng',    '2025-03-04'),
-    ('pgu-006', 'bb-009', 'usr-004',  2.00, 'Goreng kentang & nasi',   '2025-03-04'),
+    ('pgu-006', 'bb-009', 'usr-004',  2.00, 'Goreng kentang dan nasi', '2025-03-04'),
     ('pgu-007', 'bb-001', 'usr-004',  1.50, 'Produksi kopi siang',     '2025-03-05'),
     ('pgu-008', 'bb-002', 'usr-005',  4.00, 'Tambahan susu minuman',   '2025-03-06'),
     ('pgu-009', 'bb-008', 'usr-005',  2.50, 'Produksi kentang goreng', '2025-03-07'),
     ('pgu-010', 'bb-004', 'usr-004', 20.00, 'Produksi teh manis',      '2025-03-08')`,
+
+  // transaksi
+  `INSERT IGNORE INTO transaksi
+    (id_transaksi, id_outlet, id_pengguna, tanggal, total_harga, metode_bayar, status) VALUES
+    ('trx-001', 'otl-001', 'usr-002', '2025-03-01 09:15:00',  55000, 'tunai',    'selesai'),
+    ('trx-002', 'otl-001', 'usr-002', '2025-03-01 11:30:00',  49000, 'qris',     'selesai'),
+    ('trx-003', 'otl-001', 'usr-002', '2025-03-02 10:00:00',  94000, 'tunai',    'selesai'),
+    ('trx-004', 'otl-002', 'usr-003', '2025-03-01 08:45:00',  37000, 'transfer', 'selesai'),
+    ('trx-005', 'otl-002', 'usr-003', '2025-03-02 13:00:00',  62000, 'qris',     'selesai'),
+    ('trx-006', 'otl-003', 'usr-002', '2025-03-03 09:30:00',  45000, 'tunai',    'selesai'),
+    ('trx-007', 'otl-001', 'usr-002', '2025-03-03 14:00:00',  28000, 'tunai',    'dibatalkan'),
+    ('trx-008', 'otl-002', 'usr-003', '2025-03-04 10:15:00', 114000, 'qris',     'selesai'),
+    ('trx-009', 'otl-003', 'usr-002', '2025-03-05 11:00:00',  83000, 'tunai',    'selesai'),
+    ('trx-010', 'otl-001', 'usr-003', '2025-03-05 15:30:00',  67000, 'transfer', 'selesai')`,
+
+  // detail_transaksi
+  // harga_satuan = snapshot harga produk saat transaksi terjadi
+  // subtotal     = jumlah x harga_satuan
+  `INSERT IGNORE INTO detail_transaksi
+    (id_detail, id_transaksi, id_produk, jumlah, harga_satuan, subtotal) VALUES
+    ('dtl-001', 'trx-001', 'prd-001', 1, 28000,  28000),
+    ('dtl-002', 'trx-001', 'prd-002', 1, 12000,  12000),
+    ('dtl-003', 'trx-001', 'prd-006', 1, 15000,  15000),
+    ('dtl-004', 'trx-002', 'prd-004', 1, 25000,  25000),
+    ('dtl-005', 'trx-002', 'prd-002', 2, 12000,  24000),
+    ('dtl-006', 'trx-003', 'prd-007', 1, 45000,  45000),
+    ('dtl-007', 'trx-003', 'prd-003', 1, 22000,  22000),
+    ('dtl-008', 'trx-003', 'prd-006', 1, 15000,  15000),
+    ('dtl-009', 'trx-003', 'prd-002', 1, 12000,  12000),
+    ('dtl-010', 'trx-004', 'prd-004', 1, 25000,  25000),
+    ('dtl-011', 'trx-004', 'prd-002', 1, 12000,  12000),
+    ('dtl-012', 'trx-005', 'prd-005', 1, 22000,  22000),
+    ('dtl-013', 'trx-005', 'prd-001', 1, 28000,  28000),
+    ('dtl-014', 'trx-005', 'prd-002', 1, 12000,  12000),
+    ('dtl-015', 'trx-006', 'prd-007', 1, 45000,  45000),
+    ('dtl-016', 'trx-007', 'prd-001', 1, 28000,  28000),
+    ('dtl-017', 'trx-008', 'prd-007', 2, 45000,  90000),
+    ('dtl-018', 'trx-008', 'prd-002', 2, 12000,  24000),
+    ('dtl-019', 'trx-009', 'prd-001', 2, 28000,  56000),
+    ('dtl-020', 'trx-009', 'prd-006', 1, 15000,  15000),
+    ('dtl-021', 'trx-009', 'prd-002', 1, 12000,  12000),
+    ('dtl-022', 'trx-010', 'prd-005', 1, 22000,  22000),
+    ('dtl-023', 'trx-010', 'prd-007', 1, 45000,  45000)`,
 
   // laporan
   `INSERT IGNORE INTO laporan
@@ -317,7 +409,7 @@ const SEED_QUERIES = [
     ('lap-004',  NULL,     'usr-001', 'bulanan',    3, 2025, 27500000,  3680000),
     ('lap-005',  NULL,     'usr-001', 'tahunan', NULL, 2025, 95000000, 14200000)`,
 
-  // laporan_pengeluaran
+  // laporan_pengeluaran (many-to-many)
   `INSERT IGNORE INTO laporan_pengeluaran (id_laporan, id_pengeluaran) VALUES
     ('lap-001', 'pel-001'), ('lap-001', 'pel-002'),
     ('lap-001', 'pel-003'), ('lap-001', 'pel-007'),
@@ -349,7 +441,6 @@ async function createDatabase(connection) {
 async function migrate(connection) {
   console.log("\n[ MIGRASI TABEL ]");
   for (const sql of MIGRATE_QUERIES) {
-    // Ambil nama tabel dari query untuk log yang informatif
     const match = sql.match(/CREATE TABLE IF NOT EXISTS (\w+)/i);
     const tableName = match ? match[1] : "?";
     await connection.query(sql);
@@ -369,6 +460,8 @@ async function seed(connection) {
     "stok_bahan_baku",
     "pengeluaran",
     "penggunaan_bahan_baku",
+    "transaksi",
+    "detail_transaksi",
     "laporan",
     "laporan_pengeluaran",
   ];
@@ -401,7 +494,6 @@ async function main() {
   const doSeed = args.includes("--seed") || args.length === 0;
   const doRollback = args.includes("--rollback");
 
-  // Koneksi awal tanpa database (untuk CREATE DATABASE)
   const { database, ...configWithoutDb } = DB_CONFIG;
   const initConn = await mysql.createConnection(configWithoutDb);
 
@@ -411,7 +503,6 @@ async function main() {
     await initConn.end();
   }
 
-  // Koneksi utama dengan database
   const connection = await mysql.createConnection(DB_CONFIG);
 
   try {
