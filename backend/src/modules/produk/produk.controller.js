@@ -66,7 +66,7 @@ const getProdukByIdKategori = async (req, res) => {
     const produkInstance = new Produk(null, Idkategori, null, null, null);
     const produk = await produkInstance.getByKategori();
     console.log(produkInstance);
-    if (!produk.length === 0) {
+    if (produk.length === 0) {
       return res.status(404).json({
         message: `Data tidak tersedia`,
       });
@@ -113,7 +113,7 @@ const createProduk = async (req, res) => {
       deskripsi,
       harga,
     );
-    const data = produkInstance.create();
+    const data = await produkInstance.create();
     console.log(produkInstance);
     console.log(data);
     return res.status(201).json({

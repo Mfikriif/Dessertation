@@ -20,16 +20,17 @@ const register = async (req, res) => {
     if (pengguna) {
       return res.status(400).json({ message: "Email sudah terdaftar" });
     }
-
     const id_pengguna = crypto.randomUUID();
     const hashedPassword = await bcrypt.hash(password, 10);
-    const insertPengguna = await Pengguna.create({
+    const penggunaInstance = new Pengguna(
       id_pengguna,
       nama,
       email,
-      password: hashedPassword,
+      hashedPassword,
       role,
-    });
+    );
+    console.log(penggunaInstance);
+    const insertPengguna = await penggunaInstance.create();
     res.status(201).json({
       message: "Pengguna berhasil ditambahkan",
       status: "success",
