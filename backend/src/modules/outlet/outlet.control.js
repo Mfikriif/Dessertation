@@ -32,7 +32,7 @@ const createOutlet = async (req, res) => {
   const id_outlet = crypto.randomUUID();
   try {
     const outletInstance = new Outlet(id_outlet, nama_outlet, alamat);
-    const outlet = await outletInstance.create();
+    const outlet = await outletInstance.createOutletAndInitilizeStock();
 
     return res.status(201).json({
       message: `Outlet berhasil dibuat`,
