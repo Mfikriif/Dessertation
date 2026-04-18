@@ -1,4 +1,6 @@
 const Produk = require("./produk.model");
+const StokOutlet = require("../stokoutlet/stokoutlet.model");
+const Outlet = require("../outlet/outlet.model");
 const crypto = require("crypto");
 
 const getAllProduk = async (req, res) => {
@@ -101,11 +103,13 @@ const createProduk = async (req, res) => {
   if (!id_kategori || !nama_produk || !deskripsi || !harga) {
     return res.status(400).json({
       message: `Semua kolom wajib diisi!`,
-      message: `Bad Request`,
+      status: `Bad Request`,
     });
   }
   try {
     const Idproduk = crypto.randomUUID();
+    const IdStok = crypto.randomUUID();
+
     const produkInstance = new Produk(
       Idproduk,
       id_kategori,
@@ -115,10 +119,59 @@ const createProduk = async (req, res) => {
     );
     const data = await produkInstance.create();
     console.log(produkInstance);
-    console.log(data);
+
+    const outletInstance = new Outlet();
+    const getOutlet = await outletInstance.getAll();
+    if (!getOutlet || getOutlet.length === 0) {
+      return res.status(400).json({
+        message: `Gagal membuat stok: Data outlet kosong`,
+      });
+    }
+
+    const outletMapping = getOutlet.map((otl) => {
+      const uuid = crypto.randomUUID();
+      console.log("Random uuid:", uuid);
+      const stokInstance = [
+        (id_stok = uuid),
+        (outletId = otl.id_outlet),
+        (nama = otl.nama_outlet),
+      ];
+      const stokProdukInstance = new StokOutlet(
+        uuid,
+        Idproduk,
+        otl.id_outlet,
+        0,
+      );
+
+      const result = stokProdukInstance.createInitialStokOutlet();
+      console.log(stokInstance);
+      console.log("instance: ", stokProdukInstance);
+      console.log("hasil: ", result);
+      // return new Outlet(otl.id_outlet, otl.nama_outlet, otl.alamat);
+    });
+
+    // console.log(outletMapping);
+
+    console.log(getOutlet.length);
+
+    // const stokPromises = getOutlet.map((outlet) => {
+    //   const Idstok = crypto.randomUUID();
+    //   const stokAwal = 0;
+    //   const stokInstance = new StokOutlet(
+    //     IdStok,
+    //     Idproduk,
+    //     outlet.id_outlet,
+    //     stokAwal,
+    //   );
+
+    //   const stokCreate = stokInstance.createInitialStokOutlet();
+    // });
+
+    // await Promise.all(stokPromises);
+
     return res.status(201).json({
       message: `Produk berhasil dibuat`,
-      status: `Status`,
+      status: `Success`,
       data: {
         id_produk: Idproduk,
         id_kategori,

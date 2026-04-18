@@ -14,6 +14,7 @@ const authRoutes = require("./modules/auth/auth.routes");
 const penggunaRoutes = require("./modules/pengguna/pengguna.routes");
 const produkRoutes = require("./modules/produk/produk.routes");
 const bahanBakuRoutes = require("./modules/Bahanbaku/bahanbaku.routes");
+const outletRoutes = require("./modules/outlet/outlet.routes");
 
 app.use(cors());
 app.use(helmet());
@@ -33,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pengguna", penggunaRoutes);
 app.use("/api/produk", produkRoutes);
 app.use("/api/bahan-baku", bahanBakuRoutes);
+app.use("/api/outlet", outletRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
