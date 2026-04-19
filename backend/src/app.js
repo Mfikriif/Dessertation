@@ -17,7 +17,14 @@ const bahanBakuRoutes = require("./modules/Bahanbaku/bahanbaku.routes");
 const outletRoutes = require("./modules/outlet/outlet.routes");
 const kategoriRoutes = require("./modules/kategori/kategori.routes");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());

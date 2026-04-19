@@ -65,6 +65,13 @@ class Outlet {
 
     return rows;
   }
+
+  async delete() {
+    const [rows] = await pool.query(`DELETE FROM outlet WHERE id_outlet = ?`, [
+      this.id_outlet,
+    ]);
+    return rows;
+  }
 }
 
 module.exports = Outlet;

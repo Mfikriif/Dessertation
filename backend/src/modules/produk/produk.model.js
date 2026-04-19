@@ -1,7 +1,14 @@
 const pool = require("../../config/db");
 
 class Produk {
-  constructor(id_produk, id_kategori, nama_produk, deskripsi, harga) {
+  constructor(
+    id_produk,
+    id_kategori,
+    nama_produk,
+    deskripsi,
+    harga,
+    nama_kategori,
+  ) {
     this.id_produk = id_produk;
     this.id_kategori = id_kategori;
     this.nama_produk = nama_produk;
@@ -10,13 +17,20 @@ class Produk {
   }
 
   async getAll() {
-    const [rows] = await pool.query("SELECT * FROM produk");
+    const [rows] = await pool.query(
+      `SELECT p.id_produk, p.id_kategori, p.nama_produk, p.deskripsi, p.harga, k.nama_kategori 
+       FROM produk p 
+       JOIN kategori k ON p.id_kategori = k.id_kategori`,
+    );
     return rows;
   }
 
   async getById() {
     const [rows] = await pool.query(
-      "SELECT * FROM produk WHERE id_produk = ?",
+      `SELECT p.id_produk, p.id_kategori, p.nama_produk, p.deskripsi, p.harga, k.nama_kategori 
+       FROM produk p 
+       JOIN kategori k ON p.id_kategori = k.id_kategori
+       WHERE p.id_produk = ?`,
       [this.id_produk],
     );
     return rows[0];
@@ -24,7 +38,10 @@ class Produk {
 
   async getByKategori() {
     const [rows] = await pool.query(
-      "SELECT * FROM produk WHERE id_kategori = ?",
+      `SELECT p.id_produk, p.id_kategori, p.nama_produk, p.deskripsi, p.harga, k.nama_kategori 
+       FROM produk p 
+       JOIN kategori k ON p.id_kategori = k.id_kategori
+       WHERE p.id_kategori = ?`,
       [this.id_kategori],
     );
     return rows;

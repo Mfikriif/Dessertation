@@ -80,4 +80,28 @@ const updateOutlet = async (req, res) => {
   }
 };
 
-module.exports = { getAllOutlet, createOutlet, updateOutlet };
+const deleteOutlet = async (req, res) => {
+  const { Idoutlet } = req.params;
+
+  try {
+    const outletInstance = new Outlet(Idoutlet);
+    const outlet = await outletInstance.delete();
+    if (outlet.affectedRows === 0) {
+      return res.status(404).json({
+        message: `Outlet yang anda hapus tidak tersedia`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Outlet berhasil dihapus`,
+      status: `Success`,
+    });
+  } catch (error) {
+    console.error(`Error deleteOutlet: `, error);
+    return res.status(500).json({
+      message: `Internal server error`,
+    });
+  }
+};
+
+module.exports = { getAllOutlet, createOutlet, updateOutlet, deleteOutlet };

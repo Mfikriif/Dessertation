@@ -13,19 +13,10 @@ const getAllProduk = async (req, res) => {
       });
     }
 
-    const produkMapping = data.map((pdk) => {
-      return new Produk(
-        pdk.id_produk,
-        pdk.id_kategori,
-        pdk.nama_produk,
-        pdk.deskripsi,
-        pdk.harga,
-      );
-    });
     return res.status(200).json({
       message: `Data berhasil diambil`,
       status: `Sukses`,
-      data: produkMapping,
+      data,
     });
   } catch (error) {
     console.error("Error getAllProduk: ", error);
@@ -67,28 +58,17 @@ const getProdukByIdKategori = async (req, res) => {
   try {
     const produkInstance = new Produk(null, Idkategori, null, null, null);
     const produk = await produkInstance.getByKategori();
-    console.log(produkInstance);
     if (produk.length === 0) {
       return res.status(404).json({
         message: `Data tidak tersedia`,
       });
     }
 
-    const produkMapping = produk.map((pdk) => {
-      return new Produk(
-        pdk.id_produk,
-        pdk.id_kategori,
-        pdk.nama_produk,
-        pdk.deskripsi,
-        pdk.harga,
-      );
-    });
-    console.log(produkMapping);
-
+    console.log(produk);
     return res.status(200).json({
       message: `Data berhasil diambil`,
       status: `Success`,
-      data: produkMapping,
+      data: produk,
     });
   } catch (error) {
     console.error("Error getProdukByIdKategori: ", error);

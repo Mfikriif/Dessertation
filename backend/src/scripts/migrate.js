@@ -86,7 +86,7 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_stok_outlet_outlet
       FOREIGN KEY (id_outlet) REFERENCES outlet (id_outlet)
-      ON UPDATE CASCADE ON DELETE RESTRICT
+      ON UPDATE CASCADE ON DELETE CASCADE 
   ) ENGINE=InnoDB`,
 
   // 6. bahan_baku
@@ -145,7 +145,6 @@ const MIGRATE_QUERIES = [
   ) ENGINE=InnoDB`,
 
   // 10. transaksi
-  //     Satu transaksi = satu sesi belanja di satu outlet oleh satu kasir
   `CREATE TABLE IF NOT EXISTS transaksi (
     id_transaksi CHAR(36)      NOT NULL,
     id_outlet    CHAR(36)      NOT NULL,
@@ -158,16 +157,13 @@ const MIGRATE_QUERIES = [
     PRIMARY KEY (id_transaksi),
     CONSTRAINT fk_transaksi_outlet
       FOREIGN KEY (id_outlet) REFERENCES outlet (id_outlet)
-      ON UPDATE CASCADE ON DELETE RESTRICT,
+      ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_transaksi_pengguna
       FOREIGN KEY (id_pengguna) REFERENCES pengguna (id_pengguna)
       ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`,
 
   // 11. detail_transaksi
-  //     Setiap baris = satu produk dalam satu transaksi
-  //     harga_satuan disimpan sebagai snapshot agar tidak berubah
-  //     jika harga produk diubah di kemudian hari
   `CREATE TABLE IF NOT EXISTS detail_transaksi (
     id_detail    CHAR(36)      NOT NULL,
     id_transaksi CHAR(36)      NOT NULL,
@@ -211,9 +207,6 @@ const MIGRATE_QUERIES = [
   ) ENGINE=InnoDB`,
 
   // 13. laporan_pengeluaran (tabel penghubung many-to-many)
-  //     laporan (1) ——(*) laporan_pengeluaran (*——(1) pengeluaran
-  //     Satu laporan mencakup banyak pengeluaran,
-  //     satu pengeluaran bisa masuk ke banyak laporan (bulanan & tahunan)
   `CREATE TABLE IF NOT EXISTS laporan_pengeluaran (
     id_laporan     CHAR(36) NOT NULL,
     id_pengeluaran CHAR(36) NOT NULL,
@@ -371,8 +364,6 @@ const SEED_QUERIES = [
     ('trx-010', 'otl-001', 'usr-003', '2025-03-05 15:30:00',  67000, 'transfer', 'selesai')`,
 
   // detail_transaksi
-  // harga_satuan = snapshot harga produk saat transaksi terjadi
-  // subtotal     = jumlah x harga_satuan
   `INSERT IGNORE INTO detail_transaksi
     (id_detail, id_transaksi, id_produk, jumlah, harga_satuan, subtotal) VALUES
     ('dtl-001', 'trx-001', 'prd-001', 1, 28000,  28000),
