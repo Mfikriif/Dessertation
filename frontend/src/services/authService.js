@@ -13,6 +13,7 @@ export const authService = {
 
       if (data.token) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
       }
 
       return data;
@@ -27,6 +28,7 @@ export const authService = {
   logout: async () => {
     const token = localStorage.getItem("token");
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     // Tambahkan logika hapus user dari state / redirect jika perlu
     try {
       const response = await API.post(`/auth/logout`, {

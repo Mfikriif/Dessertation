@@ -63,10 +63,10 @@ class Pengguna {
     return rows;
   }
 
-  async update(id_pengguna, data) {
+  async update() {
     const [rows] = await pool.query(
       "UPDATE pengguna SET nama = ?, email = ?, role = ? WHERE id_pengguna = ?",
-      [data.nama, data.email, data.role, id_pengguna],
+      [this.nama, this.email, this.role, this.id_pengguna],
     );
     return rows;
   }

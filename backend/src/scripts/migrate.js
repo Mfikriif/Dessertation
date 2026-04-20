@@ -83,7 +83,7 @@ const MIGRATE_QUERIES = [
     CONSTRAINT uq_stok_outlet UNIQUE (id_produk, id_outlet),
     CONSTRAINT fk_stok_outlet_produk
       FOREIGN KEY (id_produk) REFERENCES produk (id_produk)
-      ON UPDATE CASCADE ON DELETE RESTRICT,
+      ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_stok_outlet_outlet
       FOREIGN KEY (id_outlet) REFERENCES outlet (id_outlet)
       ON UPDATE CASCADE ON DELETE CASCADE 
@@ -178,7 +178,7 @@ const MIGRATE_QUERIES = [
       ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_detail_produk
       FOREIGN KEY (id_produk) REFERENCES produk (id_produk)
-      ON UPDATE CASCADE ON DELETE RESTRICT
+      ON UPDATE CASCADE ON DELETE CASCADE
   ) ENGINE=InnoDB`,
 
   // 12. laporan

@@ -34,7 +34,7 @@ const Login = () => {
       if (response.user.role === "admin") {
         navigate("/admin/dashboard");
       } else if (response.user.role === "kasir") {
-        navigate("/outlet/dashboard");
+        navigate("/kasir/dashboard");
       } else if (response.user.role === "staff_produksi") {
         navigate("/produksi/dashboard");
       } else {
