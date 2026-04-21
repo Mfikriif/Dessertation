@@ -16,6 +16,7 @@ const produkRoutes = require("./modules/produk/produk.routes");
 const bahanBakuRoutes = require("./modules/Bahanbaku/bahanbaku.routes");
 const outletRoutes = require("./modules/outlet/outlet.routes");
 const kategoriRoutes = require("./modules/kategori/kategori.routes");
+const penggunaanBbRoutes = require("./modules/penggunaan_bahan_baku/penggunaan_bb.routes");
 
 app.use(
   cors({
@@ -44,6 +45,7 @@ app.use("/api/produk", produkRoutes);
 app.use("/api/bahan-baku", bahanBakuRoutes);
 app.use("/api/outlet", outletRoutes);
 app.use("/api/kategori", kategoriRoutes);
+app.use("/api/penggunaan-bb", penggunaanBbRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

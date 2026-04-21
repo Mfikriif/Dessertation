@@ -97,8 +97,10 @@ const createBahanBaku = async (req, res) => {
 
   try {
     const Idbahanbaku = crypto.randomUUID();
-    const Idstokbahanbaku = crypto.randomUUID();
     const bahanBakuInstance = new Bahanbaku(Idbahanbaku, nama_bahan, satuan);
+    const bahanBaku = await bahanBakuInstance.create();
+
+    const Idstokbahanbaku = crypto.randomUUID();
     const stokInstance = new StokBahanBaku(
       Idstokbahanbaku,
       Idbahanbaku,
@@ -106,7 +108,6 @@ const createBahanBaku = async (req, res) => {
       stok_minimum,
     );
 
-    const bahanBaku = await bahanBakuInstance.create();
     const stokBahanBaku = await stokInstance.createInitialStok();
     return res.status(200).json({
       message: `Berhasil membuat bahan baku`,

@@ -20,6 +20,14 @@ class StokBahanBaku {
     );
     return rows;
   }
+
+  async updateStok(jumlahStok, id_bahan_baku) {
+    const [rows] = await pool.query(
+      `UPDATE stok_bahan_baku SET jumlah_stok = jumlah_stok - ? WHERE id_bahan_baku = ?`,
+      [jumlahStok, id_bahan_baku],
+    );
+    return rows;
+  }
 }
 
 module.exports = StokBahanBaku;
