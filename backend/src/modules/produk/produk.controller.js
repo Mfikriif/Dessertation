@@ -237,6 +237,31 @@ const deleteProduk = async (req, res) => {
   }
 };
 
+const tambahStokProduk = async (req, res) => {
+  const { Idproduk } = req.params;
+  const { jumlah, id_outlet } = req.body;
+
+  if (!jumlah || jumlah <= 0 || !id_outlet) {
+    return res.status(400).json({
+      message: "Jumlah dan id_outlet wajib diisi",
+    });
+  }
+
+  try {
+    const produkInstance = new Produk(Idproduk);
+    await produkInstance.tambahStok(id_outlet, jumlah);
+
+    return res.status(200).json({
+      message: "Stok produk berhasil ditambahkan ke outlet",
+    });
+  } catch (error) {
+    console.error("Error tambahStokProduk:", error);
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllProduk,
   getProdukById,
@@ -244,4 +269,5 @@ module.exports = {
   createProduk,
   updateProduk,
   deleteProduk,
+  tambahStokProduk,
 };

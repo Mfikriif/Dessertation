@@ -9,6 +9,7 @@ const {
   updateProduk,
   getProdukByIdKategori,
   deleteProduk,
+  tambahStokProduk,
 } = require("./produk.controller");
 
 router.get("/", verifyToken, admin, getAllProduk);
@@ -22,5 +23,6 @@ router.get(
 router.post("/", verifyToken, admin, createProduk);
 router.put("/update/:Idproduk", verifyToken, admin, updateProduk);
 router.delete("/delete/:Idproduk", verifyToken, admin, deleteProduk);
+router.post("/tambah-stok/:Idproduk", tambahStokProduk);
 
 module.exports = router;
