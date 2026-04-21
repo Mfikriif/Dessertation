@@ -176,6 +176,54 @@ const deleteBahanBaku = async (req, res) => {
   }
 };
 
+const tambahStokBahanBaku = async (req, res) => {
+  const { Idbahanbaku } = req.params;
+  const { jumlah } = req.body;
+
+  if (!jumlah || jumlah <= 0) {
+    return res.status(400).json({
+      message: "Jumlah harus lebih dari 0",
+    });
+  }
+
+  try {
+    const bahanBakuInstance = new Bahanbaku(Idbahanbaku);
+    await bahanBakuInstance.tambahStok(jumlah);
+
+    return res.status(200).json({
+      message: "Stok berhasil ditambahkan",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+const kurangiStokBahanBaku = async (req, res) => {
+  const { Idbahanbaku } = req.params;
+  const { jumlah } = req.body;
+
+  if (!jumlah || jumlah <= 0) {
+    return res.status(400).json({
+      message: "Jumlah harus lebih dari 0",
+    });
+  }
+
+  try {
+    const bahanBakuInstance = new Bahanbaku(Idbahanbaku);
+    await bahanBakuInstance.kurangiStok(jumlah);
+
+    return res.status(200).json({
+      message: "Stok berhasil dikurangi",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllBahanbaku,
   getBahanBakuById,
@@ -183,4 +231,6 @@ module.exports = {
   createBahanBaku,
   updateBahanBaku,
   deleteBahanBaku,
+  tambahStokBahanBaku,
+  kurangiStokBahanBaku,
 };

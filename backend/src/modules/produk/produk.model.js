@@ -64,6 +64,33 @@ class Produk {
     ]);
     return rows.affectedRows;
   }
+  async tambahStok(id_outlet, jumlah) {
+    const [rows] = await pool.query(
+      `SELECT jumlah_stok FROM stok_outlet 
+     WHERE id_produk = ? AND id_outlet = ?`,
+      [this.id_produk, id_outlet],
+    );
+
+    if (rows.length === 0) {
+      const crypto = require("crypto");
+      const id_stok = crypto.randomUUID();
+
+      await pool.query(
+        `INSERT INTO stok_outlet (id_stok_outlet, id_produk, id_outlet, jumlah_stok)
+       VALUES (?, ?, ?, ?)`,
+        [id_stok, this.id_produk, id_outlet, jumlah],
+      );
+    } else {
+      await pool.query(
+        `UPDATE stok_outlet
+       SET jumlah_stok = jumlah_stok + ?, updated_at = NOW()
+       WHERE id_produk = ? AND id_outlet = ?`,
+        [jumlah, this.id_produk, id_outlet],
+      );
+    }
+
+    return true;
+  }
 }
 
 module.exports = Produk;
