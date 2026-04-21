@@ -14,10 +14,20 @@ const authRoutes = require("./modules/auth/auth.routes");
 const penggunaRoutes = require("./modules/pengguna/pengguna.routes");
 const produkRoutes = require("./modules/produk/produk.routes");
 const bahanBakuRoutes = require("./modules/Bahanbaku/bahanbaku.routes");
+const outletRoutes = require("./modules/outlet/outlet.routes");
+const kategoriRoutes = require("./modules/kategori/kategori.routes");
+const penggunaanBbRoutes = require("./modules/penggunaan_bahan_baku/penggunaan_bb.routes");
 const transaksiRoutes = require("./modules/Transaksi/transaksi.routes");
 const laporanRoutes = require("./modules/laporan/laporan.routes");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
@@ -35,6 +45,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pengguna", penggunaRoutes);
 app.use("/api/produk", produkRoutes);
 app.use("/api/bahan-baku", bahanBakuRoutes);
+app.use("/api/outlet", outletRoutes);
+app.use("/api/kategori", kategoriRoutes);
+app.use("/api/penggunaan-bb", penggunaanBbRoutes);
 app.use("/api/transaksi", transaksiRoutes);
 app.use("/api/laporan", laporanRoutes);
 

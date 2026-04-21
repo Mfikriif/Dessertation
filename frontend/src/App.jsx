@@ -1,18 +1,68 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import Login from "./pages/Auth/Login";
+import AdminLayout from "./layouts/AdminLayout";
+import Dashboard from "./pages/Admin/Dashboard";
+import ProductList from "./pages/Admin/DataMaster/ProductList";
+import CategoryList from "./pages/Admin/DataMaster/CategoryList";
+import UserList from "./pages/Admin/DataMaster/UserList";
+import OutletList from "./pages/Admin/DataMaster/OutletList";
+import ProtectedRoute from "./component/ProtectedRoute";
+import NotFound from "./pages/NotFound";
+import DashboardKasir from "./pages/Kasir/Dashboard";
+
 function App() {
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="rounded-xl bg-white p-8 shadow-lg">
-        <h1 className="text-3xl font-bold text-blue-600">
-          Halo Dessertation! 🍰
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Tailwind CSS sudah berhasil dipasang di React 19.
-        </p>
-        <button className="mt-4 rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
-          Mulai Ngoding
-        </button>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Toaster position="top-right" reverseOrder={false} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/not-found" element={<NotFound />} />
+
+        {/* Admin Routes - Protected */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="dashboard" element={<Dashboard />} />
+
+          {/* Data Master Routes */}
+          <Route path="data-master">
+            <Route path="produk" element={<ProductList />} />
+            <Route path="kategori" element={<CategoryList />} />
+            <Route path="pengguna" element={<UserList />} />
+            <Route path="outlet" element={<OutletList />} />
+            <Route
+              index
+              element={<Navigate to="/admin/data-master/produk" replace />}
+            />
+          </Route>
+
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        </Route>
+
+        {/* Kasir Routes - Protected */}
+        <Route
+          path="/kasir"
+          element={
+            <ProtectedRoute allowedRoles={["kasir"]}>
+              {/* <KasirLayout /> */}
+            </ProtectedRoute>
+          }
+        >
+          <Route path="dashboard" element={<DashboardKasir />} />
+          <Route index element={<Navigate to="/kasir/dashboard" replace />} />
+        </Route>
+
+        {/* Catch all unmapped routes */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

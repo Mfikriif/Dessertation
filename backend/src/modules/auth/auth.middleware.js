@@ -2,7 +2,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
+  // const authHeader = req.headers["authorization"];
+  const token =
+    req.cookies.token || req.headers["authorization"]?.split(" ")[1];
   if (!token) {
     return res.status(401).json({
       message: "Sesi habis, silahkan login kembali",

@@ -1,4 +1,5 @@
 const Bahanbaku = require("./bahanbaku.model");
+const StokBahanBaku = require("../stokbahanbaku/stokbahanbaku.model");
 const crypto = require("crypto");
 
 const getAllBahanbaku = async (req, res) => {
@@ -86,9 +87,9 @@ const getBahanBakuByName = async (req, res) => {
 };
 
 const createBahanBaku = async (req, res) => {
-  const { nama_bahan, satuan } = req.body;
-
-  if (!nama_bahan || !satuan) {
+  const { nama_bahan, satuan, stok_minimum } = req.body;
+  const initialJumlahStok = 0;
+  if (!nama_bahan || !satuan || !stok_minimum) {
     return res.status(401).json({
       message: `Data yang anda masukan tidak lengkap`,
     });
@@ -99,13 +100,25 @@ const createBahanBaku = async (req, res) => {
     const bahanBakuInstance = new Bahanbaku(Idbahanbaku, nama_bahan, satuan);
     const bahanBaku = await bahanBakuInstance.create();
 
+    const Idstokbahanbaku = crypto.randomUUID();
+    const stokInstance = new StokBahanBaku(
+      Idstokbahanbaku,
+      Idbahanbaku,
+      initialJumlahStok,
+      stok_minimum,
+    );
+
+    const stokBahanBaku = await stokInstance.createInitialStok();
     return res.status(200).json({
       message: `Berhasil membuat bahan baku`,
       status: `Success`,
       data: {
         id_bahan_baku: Idbahanbaku,
+        id_stok_bb: Idstokbahanbaku,
         nama_bahan,
+        jumlah_stok: initialJumlahStok,
         satuan,
+        stok_minimum,
       },
     });
   } catch (error) {
