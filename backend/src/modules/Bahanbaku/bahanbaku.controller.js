@@ -14,7 +14,13 @@ const getAllBahanbaku = async (req, res) => {
     }
 
     const data = bahanBaku.map((bb) => {
-      return new Bahanbaku(bb.id_bahan_baku, bb.nama_bahan, bb.satuan);
+      return {
+        id_bahan_baku: bb.id_bahan_baku,
+        nama_bahan: bb.nama_bahan,
+        satuan: bb.satuan,
+        jumlah_stok: bb.jumlah_stok,
+        stok_minimum: bb.stok_minimum,
+      };
     });
     return res.status(200).json({
       message: `Data bahan baku berhasil diambil`,
@@ -71,7 +77,13 @@ const getBahanBakuByName = async (req, res) => {
     }
 
     const data = bahanBaku.map((bb) => {
-      return new Bahanbaku(bb.id_bahan_baku, bb.nama_bahan, bb.satuan);
+      return {
+        id_bahan_baku: bb.id_bahan_baku,
+        nama_bahan: bb.nama_bahan,
+        satuan: bb.satuan,
+        jumlah_stok: bb.jumlah_stok,
+        stok_minimum: bb.stok_minimum,
+      };
     });
     return res.status(200).json({
       message: `Data berhasil diambil`,

@@ -8,13 +8,20 @@ class Bahanbaku {
   }
 
   async getAll() {
-    const [rows] = await pool.query("SELECT * FROM bahan_baku");
+    const [rows] = await pool.query(
+      `SELECT b.*, s.jumlah_stok, s.stok_minimum 
+       FROM bahan_baku b 
+       LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku`
+    );
     return rows;
   }
 
   async getById() {
     const [rows] = await pool.query(
-      "SELECT * FROM bahan_baku WHERE id_bahan_baku = ? ",
+      `SELECT b.*, s.jumlah_stok, s.stok_minimum 
+       FROM bahan_baku b 
+       LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku 
+       WHERE b.id_bahan_baku = ? `,
       [this.id_bahan_baku],
     );
     return rows[0];
@@ -22,8 +29,11 @@ class Bahanbaku {
 
   async findByName() {
     const [rows] = await pool.query(
-      "SELECT * FROM bahan_baku WHERE nama_bahan LIKE ?",
-      [this.nama_bahan],
+      `SELECT b.*, s.jumlah_stok, s.stok_minimum 
+       FROM bahan_baku b 
+       LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku 
+       WHERE b.nama_bahan LIKE ?`,
+      [`%${this.nama_bahan}%`],
     );
     return rows;
   }
@@ -45,6 +55,15 @@ class Bahanbaku {
   }
 
   async delete() {
+    // Delete child rows first since they might have RESTRICT constraints
+    await pool.query(
+      "DELETE FROM penggunaan_bahan_baku WHERE id_bahan_baku = ?",
+      [this.id_bahan_baku],
+    );
+    await pool.query(
+      "DELETE FROM stok_bahan_baku WHERE id_bahan_baku = ?",
+      [this.id_bahan_baku],
+    );
     const [rows] = await pool.query(
       "DELETE FROM bahan_baku WHERE id_bahan_baku = ?",
       [this.id_bahan_baku],

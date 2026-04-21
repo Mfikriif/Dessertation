@@ -1,5 +1,6 @@
 const PenggunaanBB = require("./penggunaan_bb.model");
 const StokBahanBaku = require("../stokbahanbaku/stokbahanbaku.model");
+const crypto = require("crypto");
 
 const createPenggunaan = async (req, res) => {
   const { id_bahan_baku, jumlah_digunakan, catatan } = req.body;
