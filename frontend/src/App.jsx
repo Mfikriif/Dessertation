@@ -8,6 +8,8 @@ import CategoryList from "./pages/Admin/DataMaster/CategoryList";
 import UserList from "./pages/Admin/DataMaster/UserList";
 import OutletList from "./pages/Admin/DataMaster/OutletList";
 import ManajemenStok from "./pages/Admin/ManajemenStok";
+import CatatanOperasional from "./pages/Admin/CatatanOperasional";
+import Laporan from "./pages/Admin/Laporan";
 import ProtectedRoute from "./component/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import DashboardKasir from "./pages/Kasir/Dashboard";
@@ -46,6 +48,12 @@ function App() {
 
           {/* Manajemen Stok */}
           <Route path="manajemen-stok" element={<ManajemenStok />} />
+
+          {/* Catatan Operasional */}
+          <Route path="catatan-operasional" element={<CatatanOperasional />} />
+
+          {/* Laporan */}
+          <Route path="laporan" element={<Laporan />} />
 
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
         </Route>

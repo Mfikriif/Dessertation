@@ -9,9 +9,17 @@ class Bahanbaku {
 
   async getAll() {
     const [rows] = await pool.query(
-      `SELECT b.*, s.jumlah_stok, s.stok_minimum 
-       FROM bahan_baku b 
-       LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku`
+      `SELECT 
+       b.*, 
+       s.jumlah_stok, 
+       s.stok_minimum,
+       CASE 
+         WHEN s.jumlah_stok < s.stok_minimum THEN 'Kritis'
+         WHEN s.jumlah_stok >= s.stok_minimum AND s.jumlah_stok <= (s.stok_minimum + 5) THEN 'Menipis'
+         ELSE 'Optimal'
+       END AS status_stok
+     FROM bahan_baku b 
+     LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku`,
     );
     return rows;
   }
@@ -60,10 +68,9 @@ class Bahanbaku {
       "DELETE FROM penggunaan_bahan_baku WHERE id_bahan_baku = ?",
       [this.id_bahan_baku],
     );
-    await pool.query(
-      "DELETE FROM stok_bahan_baku WHERE id_bahan_baku = ?",
-      [this.id_bahan_baku],
-    );
+    await pool.query("DELETE FROM stok_bahan_baku WHERE id_bahan_baku = ?", [
+      this.id_bahan_baku,
+    ]);
     const [rows] = await pool.query(
       "DELETE FROM bahan_baku WHERE id_bahan_baku = ?",
       [this.id_bahan_baku],

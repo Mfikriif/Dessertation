@@ -13,7 +13,9 @@ export const usePenggunaanBb = () => {
       return { success: true };
     } catch (err) {
       console.error("Error adding penggunaan bb:", err);
-      toast.error(err?.response?.data?.message || "Gagal menyimpan catatan penggunaan");
+      toast.error(
+        err?.response?.data?.message || "Gagal menyimpan catatan penggunaan",
+      );
       return { success: false, error: err };
     } finally {
       setIsLoading(false);

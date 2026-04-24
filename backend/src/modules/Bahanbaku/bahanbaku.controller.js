@@ -6,11 +6,24 @@ const getAllBahanbaku = async (req, res) => {
   try {
     const bahanBakuInstance = new Bahanbaku();
     const bahanBaku = await bahanBakuInstance.getAll();
+    const optimalStok = 15;
+
     console.log(bahanBaku);
     if (bahanBaku.length === 0) {
       return res.status(404).json({
         message: `Bahan baku kosong, silahkan masukan data bahan baku`,
       });
+    }
+
+    if (bahanBaku.jumlah_stok <= bahanBaku.stok_minimum) {
+      const statusBahanBaku = "KRITIS";
+    } else if (
+      bahanBaku.jumlah_stok > bahanBaku.stok_minimum &&
+      bahanBaku.jumlah_stok < optimalStok
+    ) {
+      const statusBahanBaku = "MENIPIS";
+    } else if (bahanBaku.jumlah_stok >= optimalStok) {
+      const statusBahanBaku = "OPTIMAL";
     }
 
     const data = bahanBaku.map((bb) => {
@@ -25,7 +38,7 @@ const getAllBahanbaku = async (req, res) => {
     return res.status(200).json({
       message: `Data bahan baku berhasil diambil`,
       status: `Success`,
-      data: data,
+      data: bahanBaku,
     });
   } catch (error) {
     console.error("Error getAllBahanbaku: ", error);
@@ -154,7 +167,7 @@ const updateBahanBaku = async (req, res) => {
   try {
     const bahanBakuInstance = new Bahanbaku(Idbahanbaku, nama_bahan, satuan);
     const bahanBaku = await bahanBakuInstance.update();
-    if (bahanBaku.length === 0) {
+    if (bahanBaku.affectedRows === 0) {
       return res.status(404).json({
         message: `Data yang anda ubah tidak tersedia`,
       });

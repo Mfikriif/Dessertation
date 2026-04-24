@@ -10,16 +10,18 @@ class Pengguna {
   }
 
   static async findByName(nama) {
-    const [rows] = await pool.query("SELECT * FROM pengguna WHERE nama = ?", [
-      nama,
-    ]);
+    const [rows] = await pool.query(
+      "SELECT * FROM pengguna WHERE nama = ? AND is_active = 1",
+      [nama],
+    );
     return rows[0];
   }
 
   static async findByEmail(email) {
-    const [rows] = await pool.query("SELECT * FROM pengguna WHERE email = ?", [
-      email,
-    ]);
+    const [rows] = await pool.query(
+      "SELECT * FROM pengguna WHERE email = ? AND is_active = 1",
+      [email],
+    );
     return rows[0];
   }
 
@@ -33,7 +35,7 @@ class Pengguna {
 
   async getPenggunaByRole() {
     const [rows] = await pool.query(
-      "SELECT id_pengguna, nama, email, role FROM pengguna WHERE role = ?",
+      "SELECT id_pengguna, nama, email, role FROM pengguna WHERE role = ? AND is_active = 1",
       [this.role],
     );
     return rows;
@@ -41,7 +43,7 @@ class Pengguna {
 
   static async getAll() {
     const [rows] = await pool.query(
-      "SELECT id_pengguna, nama, email, role FROM pengguna",
+      "SELECT id_pengguna, nama, email, role FROM pengguna WHERE is_active = 1",
     );
     return rows;
   }
@@ -73,7 +75,7 @@ class Pengguna {
 
   async delete() {
     const [rows] = await pool.query(
-      "DELETE FROM pengguna WHERE id_pengguna = ?",
+      "UPDATE pengguna SET is_active = 0 WHERE id_pengguna = ?",
       [this.id_pengguna],
     );
     return rows;

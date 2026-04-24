@@ -35,6 +35,7 @@ const MIGRATE_QUERIES = [
     email        VARCHAR(100) NOT NULL UNIQUE,
     password     VARCHAR(255) NOT NULL,
     role         ENUM('admin','kasir','staff_produksi') NOT NULL,
+    is_active    TINYINT(1)   NOT NULL DEFAULT 1,
     created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_pengguna)
   ) ENGINE=InnoDB`,

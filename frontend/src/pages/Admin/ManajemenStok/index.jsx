@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Edit2, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useBahanBaku } from "../../../hooks/useBahanBaku";
@@ -19,6 +19,10 @@ const ManajemenStok = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedBahanBaku, setSelectedBahanBaku] = useState(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 7;
 
   // Right pane state
   const [penggunaanForm, setPenggunaanForm] = useState({
@@ -111,6 +115,21 @@ const ManajemenStok = () => {
     { kritis: 0, menipis: 0, optimal: 0 },
   );
 
+  // Pagination calculations
+  const totalItems = Array.isArray(bahanBakuList) ? bahanBakuList.length : 0;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
+
+  const currentData = Array.isArray(bahanBakuList)
+    ? bahanBakuList.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+      )
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -191,14 +210,16 @@ const ManajemenStok = () => {
                 </tr>
               </thead>
               <tbody>
-                {bahanBakuList.map((item, index) => {
+                {currentData.map((item, index) => {
+                  const globalIndex =
+                    (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                   const status = getStatus(item.jumlah_stok, item.stok_minimum);
                   return (
                     <tr
                       key={item.id_bahan_baku}
                       className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                     >
-                      <td className="px-6 py-4 text-gray-500">{index + 1}.</td>
+                      <td className="px-6 py-4 text-gray-500">{globalIndex}.</td>
                       <td className="px-6 py-4 font-semibold text-gray-900 uppercase text-xs tracking-wide">
                         {item.nama_bahan}
                       </td>
@@ -207,9 +228,9 @@ const ManajemenStok = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2.5 py-1 rounded text-[10px] font-bold tracking-wider ${getStatusColor(status)}`}
+                          className={`px-2.5 py-1 rounded text-[10px] font-bold tracking-wider ${getStatusColor(item.status_stok?.toUpperCase())}`}
                         >
-                          {status}
+                          {item.status_stok?.toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -231,7 +252,7 @@ const ManajemenStok = () => {
                     </tr>
                   );
                 })}
-                {bahanBakuList.length === 0 && (
+                {currentData.length === 0 && (
                   <tr>
                     <td
                       colSpan="5"
@@ -243,6 +264,60 @@ const ManajemenStok = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="p-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-xs font-bold text-gray-500 tracking-wider">
+              MENAMPILKAN {currentData.length} DARI {totalItems} BAHAN BAKU
+            </span>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(
+                  (pageNum) =>
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1),
+                )
+                .map((pageNum, index, array) => (
+                  <div key={pageNum} className="flex items-center gap-1">
+                    {index > 0 && array[index - 1] !== pageNum - 1 && (
+                      <span className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs">
+                        ...
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-black text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  </div>
+                ))}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="p-1.5 rounded-md text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 

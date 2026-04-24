@@ -67,8 +67,6 @@ const UserList = () => {
     if (!result.success) throw result.error;
   };
 
-  console.log(handleEditPengguna.id);
-
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in zoom-in duration-500">
       {/* Page Header */}

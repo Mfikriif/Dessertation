@@ -38,7 +38,9 @@ export const useBahanBaku = () => {
       return { success: true };
     } catch (err) {
       console.error("Error adding bahan baku:", err);
-      toast.error(err?.response?.data?.message || "Gagal menambahkan bahan baku");
+      toast.error(
+        err?.response?.data?.message || "Gagal menambahkan bahan baku",
+      );
       return { success: false, error: err };
     } finally {
       setIsLoading(false);
@@ -54,7 +56,9 @@ export const useBahanBaku = () => {
       return { success: true };
     } catch (err) {
       console.error("Error editing bahan baku:", err);
-      toast.error(err?.response?.data?.message || "Gagal mengupdate bahan baku");
+      toast.error(
+        err?.response?.data?.message || "Gagal mengupdate bahan baku",
+      );
       return { success: false, error: err };
     } finally {
       setIsLoading(false);
@@ -77,5 +81,13 @@ export const useBahanBaku = () => {
     }
   };
 
-  return { bahanBakuList, isLoading, error, fetchBahanBaku, addBahanBaku, editBahanBaku, deleteBahanBaku };
+  return {
+    bahanBakuList,
+    isLoading,
+    error,
+    fetchBahanBaku,
+    addBahanBaku,
+    editBahanBaku,
+    deleteBahanBaku,
+  };
 };

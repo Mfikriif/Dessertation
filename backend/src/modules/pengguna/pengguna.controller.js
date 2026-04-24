@@ -188,14 +188,15 @@ const updatePassword = async (req, res) => {
 const deletePenggunaById = async (req, res) => {
   try {
     const { Idpengguna } = req.params;
-    const penggunaInstance = new Pengguna();
-    const pengguna = await penggunaInstance.delete(Idpengguna);
+    console.log(Idpengguna);
+    const penggunaInstance = new Pengguna(Idpengguna);
+    const pengguna = await penggunaInstance.delete();
     if (pengguna.affectedRows === 0) {
       return res.status(404).json({
         message: `Pengguna tidak ditemukan`,
       });
     }
-
+    console.log(pengguna);
     return res.status(200).json({
       message: `Pengguna berhasil dihapus`,
     });

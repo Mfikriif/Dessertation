@@ -28,6 +28,15 @@ class StokBahanBaku {
     );
     return rows;
   }
+
+  async getAllStok() {
+    const [rows] = await pool.query(
+      `SELECT b.*, s.jumlah_stok, s.stok_minimum 
+       FROM bahan_baku b 
+       LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku`,
+    );
+    return rows;
+  }
 }
 
 module.exports = StokBahanBaku;
