@@ -7,7 +7,7 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
     biaya: "",
     deskripsi: "",
   });
-  const [errors, setErrors] = useState({});
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (isOpen && initialData) {
@@ -18,32 +18,21 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
         biaya: initialData.biaya || "",
         deskripsi: initialData.deskripsi || "",
       });
-      setErrors({});
+      setErrorMsg("");
     }
   }, [isOpen, initialData]);
 
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.tanggal) newErrors.tanggal = "Tanggal wajib diisi";
-    if (!formData.biaya) newErrors.biaya = "Nominal wajib diisi";
-    if (!formData.deskripsi.trim())
-      newErrors.deskripsi = "Keterangan wajib diisi";
-    return newErrors;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+    setErrorMsg("");
     const result = await onEdit(initialData.id_pengeluaran, {
       tanggal: formData.tanggal,
       biaya: parseFloat(formData.biaya),
       deskripsi: formData.deskripsi,
     });
-    if (result.success) {
+    if (result && !result.success) {
+      setErrorMsg(result.error?.response?.data?.message || "Gagal mengedit pengeluaran");
+    } else {
       onClose();
     }
   };
@@ -58,6 +47,12 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
             EDIT CATATAN OPERASIONAL
           </h2>
 
+          {errorMsg && (
+            <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+              {errorMsg}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               {/* Tanggal */}
@@ -71,20 +66,13 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   </div>
                   <input
                     type="date"
-                    className={`w-full pl-10 pr-4 py-2.5 border rounded-xl outline-none transition-colors text-sm ${
-                      errors.tanggal
-                        ? "border-red-500 focus:border-red-500"
-                        : "border-gray-200 focus:border-gray-900"
-                    }`}
+                    className="w-full pl-10 pr-4 py-2.5 border rounded-xl outline-none transition-colors text-sm border-gray-200 focus:border-gray-900"
                     value={formData.tanggal}
                     onChange={(e) =>
                       setFormData({ ...formData, tanggal: e.target.value })
                     }
                   />
                 </div>
-                {errors.tanggal && (
-                  <p className="text-red-500 text-xs mt-1">{errors.tanggal}</p>
-                )}
               </div>
 
               {/* Nominal */}
@@ -101,11 +89,7 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   <input
                     type="number"
                     step="1"
-                    className={`w-full pl-10 pr-4 py-2.5 border rounded-xl outline-none transition-colors text-sm ${
-                      errors.biaya
-                        ? "border-red-500 focus:border-red-500"
-                        : "border-gray-200 focus:border-gray-900"
-                    }`}
+                    className="w-full pl-10 pr-4 py-2.5 border rounded-xl outline-none transition-colors text-sm border-gray-200 focus:border-gray-900"
                     placeholder="30.000"
                     value={formData.biaya}
                     onChange={(e) =>
@@ -113,9 +97,6 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
                     }
                   />
                 </div>
-                {errors.biaya && (
-                  <p className="text-red-500 text-xs mt-1">{errors.biaya}</p>
-                )}
               </div>
             </div>
 
@@ -126,20 +107,13 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
               </label>
               <textarea
                 rows={3}
-                className={`w-full px-4 py-2.5 border rounded-xl outline-none transition-colors text-sm resize-none ${
-                  errors.deskripsi
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-gray-200 focus:border-gray-900"
-                }`}
+                className="w-full px-4 py-2.5 border rounded-xl outline-none transition-colors text-sm resize-none border-gray-200 focus:border-gray-900"
                 placeholder="BELI GULA PASIR 10 KG"
                 value={formData.deskripsi}
                 onChange={(e) =>
                   setFormData({ ...formData, deskripsi: e.target.value })
                 }
               />
-              {errors.deskripsi && (
-                <p className="text-red-500 text-xs mt-1">{errors.deskripsi}</p>
-              )}
             </div>
 
             {/* Buttons */}

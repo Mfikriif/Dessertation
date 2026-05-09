@@ -133,7 +133,7 @@ const createBahanBaku = async (req, res) => {
       stok_minimum,
     );
 
-    const stokBahanBaku = await stokInstance.createInitialStok();
+    const stokBahanBaku = await stokInstance.createInitiateStok();
     return res.status(200).json({
       message: `Berhasil membuat bahan baku`,
       status: `Success`,

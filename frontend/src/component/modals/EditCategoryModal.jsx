@@ -6,6 +6,7 @@ const EditCategoryModal = ({ isOpen, onClose, onEdit, initialData }) => {
     nama_kategori: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (initialData) {
@@ -23,12 +24,22 @@ const EditCategoryModal = ({ isOpen, onClose, onEdit, initialData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!initialData) return;
+
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
-      await onEdit(initialData.id_kategori, formData);
-      onClose();
+      const result = await onEdit(initialData.id_kategori, {
+        nama_kategori: formData.nama_kategori.trim()
+      });
+      if (result && !result.success) {
+        setErrorMsg(result.error?.response?.data?.message || "Gagal mengedit kategori");
+      } else {
+        setErrorMsg("");
+        onClose();
+      }
     } catch (error) {
       console.error("Gagal mengedit kategori:", error);
+      setErrorMsg("Terjadi kesalahan sistem");
     } finally {
       setIsSubmitting(false);
     }
@@ -52,6 +63,11 @@ const EditCategoryModal = ({ isOpen, onClose, onEdit, initialData }) => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto">
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+              {errorMsg}
+            </div>
+          )}
           <form id="editCategoryForm" onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Nama Kategori</label>
@@ -64,7 +80,6 @@ const EditCategoryModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   name="nama_kategori"
                   value={formData.nama_kategori}
                   onChange={handleChange}
-                  required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black outline-none transition-all text-sm"
                   placeholder="Masukkan nama kategori"
                 />

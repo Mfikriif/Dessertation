@@ -8,7 +8,7 @@ class StokOutlet {
     this.jumlah_stok = jumlah_stok;
   }
 
-  async createInitialStokOutlet() {
+  async createInitiateStokOutlet() {
     const [rows] = await pool.query(
       "INSERT INTO stok_outlet (id_stok_outlet, id_produk, id_outlet, jumlah_stok) VALUES (?, ?, ?, ?)",
       [this.id_stok_outlet, this.id_produk, this.id_outlet, this.jumlah_stok],

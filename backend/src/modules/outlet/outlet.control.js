@@ -30,9 +30,16 @@ const getAllOutlet = async (req, res) => {
 const createOutlet = async (req, res) => {
   const { nama_outlet, alamat } = req.body;
   const id_outlet = crypto.randomUUID();
+
+  if (!nama_outlet || !alamat) {
+    return res.status(401).json({
+      message: `Data yang anda masukkan tidak lengkap`,
+      status: `Bad Request`,
+    });
+  }
   try {
     const outletInstance = new Outlet(id_outlet, nama_outlet, alamat);
-    const outlet = await outletInstance.createOutletAndInitilizeStock();
+    const outlet = await outletInstance.createOutletAndInitiateStok();
 
     return res.status(201).json({
       message: `Outlet berhasil dibuat`,
@@ -54,6 +61,14 @@ const createOutlet = async (req, res) => {
 const updateOutlet = async (req, res) => {
   const { nama_outlet, alamat } = req.body;
   const { Idoutlet } = req.params;
+
+  if (!nama_outlet || !alamat) {
+    return res.status(401).json({
+      message: `Data yang anda masukkan tidak lengkap`,
+      status: `Bad Request`,
+    });
+  }
+
   try {
     const outletIntance = new Outlet(Idoutlet, nama_outlet, alamat);
     const outlet = await outletIntance.update();

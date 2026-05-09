@@ -1,4 +1,11 @@
-import { TrendingUp, Banknote, Database } from "lucide-react";
+import {
+  TrendingUp,
+  Banknote,
+  Database,
+  Package,
+  Tags,
+  Store,
+} from "lucide-react";
 import StatCard from "../../component/ui/StatCard";
 import ActivityItem from "../../component/ui/ActivityItem";
 
@@ -15,21 +22,19 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-4 animate-in fade-in zoom-in duration-500">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-          Ringkasan Performa
-          <br />
-          Dessertation
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          Ringkasan Performa Dessertation
         </h1>
-        <p className="text-gray-500 mt-2">
+        <p className="text-sm text-gray-500 mt-1">
           Aktifitas dan performa keseluruhan outlet
         </p>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex flex-wrap justify-start gap-6">
         <StatCard
           title="Total Pendapatan"
           amount="RP 45.500.000"
@@ -49,17 +54,35 @@ const Dashboard = () => {
           icon={<Database className="w-5 h-5" />}
           alert={true}
         />
+        <StatCard
+          title="Total Produk"
+          amount="120 Item"
+          subtitle="Tersedia"
+          icon={<Package className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Kategori Produk"
+          amount="12 Kategori"
+          subtitle="Aktif"
+          icon={<Tags className="w-5 h-5" />}
+        />
+        {/* <StatCard
+          title="Total Outlet"
+          amount="8 Outlet"
+          subtitle="Beroperasi"
+          icon={<Store className="w-5 h-5" />}
+        /> */}
       </div>
 
       {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Chart Area */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-8 shadow-sm border border-gray-100 flex flex-col">
-          <h2 className="text-lg font-bold text-gray-900 mb-8">
+        <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
             Performa Mingguan
           </h2>
 
-          <div className="flex-1 flex items-end justify-between px-4 sm:px-8 pb-4 relative min-h-[300px]">
+          <div className="flex-1 flex items-end justify-between px-4 sm:px-8 pb-4 relative min-h-[220px]">
             {/* Horizontal Grid lines mock */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-10">
               {[1, 2, 3, 4].map((i) => (
@@ -74,7 +97,7 @@ const Dashboard = () => {
                 key={data.day}
                 className="flex flex-col items-center gap-4 z-10 w-full"
               >
-                <div className="h-[220px] w-8 sm:w-12 md:w-16 flex flex-col justify-end group">
+                <div className="h-[160px] w-8 sm:w-12 md:w-16 flex flex-col justify-end group">
                   <div
                     className="w-full bg-gray-100 rounded-t-sm transition-all duration-300 group-hover:bg-gray-200"
                     style={{ height: `${data.max - data.val}%` }}
@@ -94,7 +117,7 @@ const Dashboard = () => {
 
         {/* Activity Area */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
             Aktivitas Rumah Produksi
           </h2>
 

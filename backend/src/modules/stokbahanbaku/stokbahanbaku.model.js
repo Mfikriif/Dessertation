@@ -8,7 +8,15 @@ class StokBahanBaku {
     this.stok_minimum = stok_minimum;
   }
 
-  async createInitialStok() {
+  async getStokById() {
+    const [rows] = await pool.query(
+      `SELECT * FROM stok_bahan_baku WHERE id_bahan_baku = ?`,
+      [this.id_bahan_baku],
+    );
+    return rows[0];
+  }
+
+  async createInitiateStok() {
     const [rows] = await pool.query(
       "INSERT INTO stok_bahan_baku ( id_stok_bb , id_bahan_baku, jumlah_stok, stok_minimum) VALUES (?, ?, ?, ?)",
       [

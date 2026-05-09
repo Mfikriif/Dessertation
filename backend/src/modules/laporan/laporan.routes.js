@@ -10,6 +10,7 @@ const {
   getDetailTahunan,
   getDetailBulananOutlet,
   getDetailTahunanOutlet,
+  createExcelFile,
 } = require("./laporan.controller");
 
 router.get("/harian", getLaporanHarian);
@@ -23,5 +24,9 @@ router.get(
   getDetailBulananOutlet,
 );
 router.get("/tahunan-detail/outlet/:tahun/:Idoutlet", getDetailTahunanOutlet);
+router.get("/export-laporan/bulanan/:bulan/:tahun", createExcelFile);
+router.get("/export-laporan/bulanan/:bulan/:tahun/:Idoutlet", createExcelFile);
+router.get("/export-laporan/tahunan/:tahun", createExcelFile);
+router.get("/export-laporan/tahunan/:tahun/:Idoutlet", createExcelFile);
 
 module.exports = router;

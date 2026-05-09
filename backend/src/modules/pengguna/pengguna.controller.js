@@ -126,6 +126,13 @@ const updatePenggunaById = async (req, res) => {
   try {
     const { Idpengguna } = req.params;
     const { nama, email, role } = req.body;
+
+    if (!nama || !email || !role) {
+      return res.status(401).json({
+        message: `Data yang anda masukkan tidak lengkap`,
+        status: `Bad Request`,
+      });
+    }
     const pengguna = new Pengguna(Idpengguna, nama, email, null, role);
     const data = await pengguna.update();
 

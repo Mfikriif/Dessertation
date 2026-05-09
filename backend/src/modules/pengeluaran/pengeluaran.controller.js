@@ -5,15 +5,14 @@ const createPengeluaran = async (req, res) => {
   const { tanggal, biaya, deskripsi } = req.body;
   const Idpengguna = req.user.id_pengguna;
   const Idpengeluaran = crypto.randomUUID();
-  console.log(deskripsi);
-  try {
-    if (!tanggal || !biaya || !deskripsi) {
-      return res.status(401).json({
-        message: `Tanggal, biaya, deskripsi wajib diisi`,
-        status: `Bad request`,
-      });
-    }
 
+  if (!tanggal || !biaya || !deskripsi) {
+    return res.status(401).json({
+      message: `Tanggal, biaya, deskripsi wajib diisi`,
+      status: `Bad request`,
+    });
+  }
+  try {
     const pengeluaranInstance = new Pengeluaran(
       Idpengeluaran,
       Idpengguna,

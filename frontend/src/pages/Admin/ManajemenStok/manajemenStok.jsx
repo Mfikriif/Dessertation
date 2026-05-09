@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Plus, Edit2, Trash2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useBahanBaku } from "../../../hooks/useBahanBaku";
@@ -10,7 +17,7 @@ import EditBahanBakuModal from "../../../component/modals/EditBahanBakuModal";
 import DeleteBahanBakuModal from "../../../component/modals/DeleteBahanBakuModal";
 
 const ManajemenStok = () => {
-  const { bahanBakuList, addBahanBaku, editBahanBaku, deleteBahanBaku } =
+  const { bahanBakuList, addBahanBaku, editBahanBaku, deleteBahanBaku, fetchBahanBaku } =
     useBahanBaku();
   const { addPenggunaan, isLoading: isAddingPenggunaan } = usePenggunaanBb();
 
@@ -50,22 +57,9 @@ const ManajemenStok = () => {
       return;
     }
 
-    // Check if sufficient stock
-    const bb = bahanBakuList.find(
-      (b) => b.id_bahan_baku === penggunaanForm.id_bahan_baku,
-    );
-    if (!bb) return;
-
-    if (
-      parseFloat(penggunaanForm.jumlah_digunakan) > parseFloat(bb.jumlah_stok)
-    ) {
-      toast.error("Jumlah penggunaan melebihi stok yang tersedia");
-      return;
-    }
-
     const res = await addPenggunaan({
       ...penggunaanForm,
-      catatan: penggunaanForm.catatan || "Penggunaan manual",
+      catatan: penggunaanForm.catatan,
     });
 
     if (res.success) {
@@ -74,16 +68,8 @@ const ManajemenStok = () => {
         jumlah_digunakan: "",
         catatan: "",
       });
+      fetchBahanBaku();
     }
-  };
-
-  const getStatus = (jumlah, minimum) => {
-    const qty = parseFloat(jumlah);
-    const min = parseFloat(minimum);
-
-    if (qty < min) return "KRITIS";
-    if (qty <= min * 1.5) return "MENIPIS";
-    return "OPTIMAL";
   };
 
   const getStatusColor = (status) => {
@@ -106,7 +92,7 @@ const ManajemenStok = () => {
   // Stats calculation
   const stats = bahanBakuList.reduce(
     (acc, curr) => {
-      const status = getStatus(curr.jumlah_stok, curr.stok_minimum);
+      const status = curr.status_stok?.toUpperCase() || "OPTIMAL";
       if (status === "KRITIS") acc.kritis++;
       else if (status === "MENIPIS") acc.menipis++;
       else acc.optimal++;
@@ -213,13 +199,14 @@ const ManajemenStok = () => {
                 {currentData.map((item, index) => {
                   const globalIndex =
                     (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
-                  const status = getStatus(item.jumlah_stok, item.stok_minimum);
                   return (
                     <tr
                       key={item.id_bahan_baku}
                       className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                     >
-                      <td className="px-6 py-4 text-gray-500">{globalIndex}.</td>
+                      <td className="px-6 py-4 text-gray-500">
+                        {globalIndex}.
+                      </td>
                       <td className="px-6 py-4 font-semibold text-gray-900 uppercase text-xs tracking-wide">
                         {item.nama_bahan}
                       </td>

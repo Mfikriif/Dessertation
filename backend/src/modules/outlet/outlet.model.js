@@ -20,7 +20,7 @@ class Outlet {
     return rows;
   }
 
-  async createOutletAndInitilizeStock() {
+  async createOutletAndInitiateStok() {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -53,7 +53,7 @@ class Outlet {
       await connection.rollback();
       throw error;
     } finally {
-      await connection.release();
+      connection.release();
     }
   }
 

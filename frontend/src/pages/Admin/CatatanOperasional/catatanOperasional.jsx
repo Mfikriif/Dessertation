@@ -43,9 +43,6 @@ const CatatanOperasional = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!form.tanggal || !form.biaya || !form.deskripsi.trim()) {
-      return;
-    }
 
     const res = await addPengeluaran({
       tanggal: form.tanggal,
@@ -53,7 +50,7 @@ const CatatanOperasional = () => {
       deskripsi: form.deskripsi,
     });
 
-    if (res.success) {
+    if (res && res.success) {
       setForm({ tanggal: "", biaya: "", deskripsi: "" });
     }
   };

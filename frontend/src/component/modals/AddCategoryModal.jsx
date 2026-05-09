@@ -6,6 +6,7 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
     nama_kategori: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -14,15 +15,23 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
-      await onAdd(formData);
-      setFormData({
-        nama_kategori: "",
-      });
-      onClose();
+      const result = await onAdd({ nama_kategori: formData.nama_kategori.trim() });
+      if (result && !result.success) {
+        setErrorMsg(result.error?.response?.data?.message || "Gagal menambahkan kategori");
+      } else {
+        setFormData({
+          nama_kategori: "",
+        });
+        setErrorMsg("");
+        onClose();
+      }
     } catch (error) {
       console.error("Gagal menambahkan kategori:", error);
+      setErrorMsg("Terjadi kesalahan sistem");
     } finally {
       setIsSubmitting(false);
     }
@@ -46,6 +55,11 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto">
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+              {errorMsg}
+            </div>
+          )}
           <form id="addCategoryForm" onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Nama Kategori</label>
@@ -58,7 +72,6 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
                   name="nama_kategori"
                   value={formData.nama_kategori}
                   onChange={handleChange}
-                  required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black outline-none transition-all text-sm"
                   placeholder="Masukkan nama kategori"
                 />

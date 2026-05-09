@@ -69,6 +69,12 @@ const createKategori = async (req, res) => {
 const updateKategori = async (req, res) => {
   const { Idkategori } = req.params;
   const { nama_kategori } = req.body;
+
+  if (!nama_kategori) {
+    return res.status(401).json({
+      message: `Nama wajib diisi`,
+    });
+  }
   try {
     const createPrefix = generatePrefix(nama_kategori);
     const randomHex = crypto.randomBytes(2).toString("hex").toUpperCase();

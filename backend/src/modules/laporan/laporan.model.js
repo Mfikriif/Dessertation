@@ -29,52 +29,117 @@ class Laporan {
       COUNT(id_transaksi) AS total_transaksi,
       SUM(total_harga) AS total_pendapatan
       FROM transaksi
-      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? 
+      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai' 
+      `,
+      params,
+    );
+
+    const harianQuery = db.query(
+      `
+      SELECT
+        DATE_FORMAT(tanggal, '%Y-%m-%d') AS tanggal_transaksi, 
+        COUNT(id_transaksi) AS jumlah_transaksi,
+        SUM(total_harga) AS total_pendapatan 
+      FROM transaksi
+      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      GROUP BY tanggal_transaksi
+      ORDER BY tanggal_transaksi ASC
       `,
       params,
     );
 
     const riwayatQuery = db.query(
       `
-      SELECT
-        id_transaksi,
-        DATE_FORMAT(tanggal, '%Y-%m-%d %H:%i:%s') AS waktu_transaksi, 
-        total_harga, 
-        metode_bayar 
-      FROM transaksi
-      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
-      ORDER BY tanggal DESC
+     SELECT 
+        t.id_transaksi, 
+        DATE_FORMAT(t.tanggal, '%Y-%m-%d %H:%i:%s') AS waktu_transaksi, 
+        t.total_harga, 
+        t.metode_bayar,
+        (
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'nama_produk', p.nama_produk,
+              'jumlah', dt.jumlah,
+              'harga_satuan', dt.harga_satuan,
+              'subtotal', dt.subtotal
+            )
+          )
+          FROM detail_transaksi dt
+          JOIN produk p ON dt.id_produk = p.id_produk
+          WHERE dt.id_transaksi = t.id_transaksi
+        ) AS detail_pembelian
+
+      FROM transaksi t
+      WHERE MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ? AND t.status = 'selesai'
+      ORDER BY t.tanggal DESC
       LIMIT ${limit} OFFSET ${offset}
       `,
       params,
     );
 
-    const [[hasilRingkasan], [hasilRiwayat]] = await Promise.all([
-      ringkasanQuery,
-      riwayatQuery,
-    ]);
+    const [[hasilRingkasan], [hasilHarian], [hasilRiwayat]] = await Promise.all(
+      [ringkasanQuery, harianQuery, riwayatQuery],
+    );
+
+    // Parsing JSON String dari MySQL menjadi Array JavaScript
+    const riwayatTerformat = hasilRiwayat.map((trx) => {
+      let detail = [];
+      try {
+        detail =
+          typeof trx.detail_pembelian === "string"
+            ? JSON.parse(trx.detail_pembelian)
+            : trx.detail_pembelian;
+      } catch (err) {
+        detail = [];
+      }
+      return {
+        ...trx,
+        detail_pembelian: detail || [],
+      };
+    });
 
     return {
       ringkasan: {
         total_transaksi: hasilRingkasan[0].total_transaksi || 0,
         total_pendapatan: hasilRingkasan[0].total_pendapatan || 0,
       },
-      riwayat: hasilRiwayat,
+      harian: hasilHarian,
+      riwayat: riwayatTerformat,
     };
   }
 
   async getLaporanTahunan() {
-    const [rows] = await db.query(
+    const [ringkasan] = await db.query(
       `
       SELECT 
-      COUNT(id_transaksi) AS total_transaksi,
-      SUM(total_harga) AS total_pendapatan
+        COUNT(id_transaksi) AS total_transaksi,
+        SUM(total_harga) AS total_pendapatan
       FROM transaksi
       WHERE YEAR(tanggal) = ?
       `,
       [this.periode_tahun],
     );
-    return rows;
+
+    const [detailOutlet] = await db.query(
+      `
+      SELECT 
+        t.id_outlet,
+        o.nama_outlet,
+        COUNT(t.id_transaksi) AS jumlah_transaksi,
+        SUM(t.total_harga) AS total_pendapatan
+      FROM transaksi t
+      JOIN outlet o ON t.id_outlet = o.id_outlet
+      WHERE YEAR(t.tanggal) = ? AND t.status = 'selesai'
+      GROUP BY t.id_outlet, o.nama_outlet
+      ORDER BY total_pendapatan DESC
+      `,
+      [this.periode_tahun],
+    );
+
+    return {
+      ringkasan: ringkasan[0],
+      detail_outlet: detailOutlet,
+    };
   }
 
   async getDetailLaporanBulanan() {
@@ -114,22 +179,22 @@ class Laporan {
   async getDetailBulananOutlet(limit = 10, offset = 0) {
     const params = [this.id_outlet, this.periode_bulan, this.periode_tahun];
 
-    // 1. Query Ringkasan (Total sebulan untuk outlet ini)
+    const outletQuery = db.query(
+      "SELECT nama_outlet FROM outlet WHERE id_outlet = ?",
+      [this.id_outlet],
+    );
+
     const ringkasanQuery = db.query(
       `
       SELECT 
-        o.nama_outlet, 
-        COUNT(t.id_transaksi) AS total_transaksi, 
-        SUM(t.total_harga) AS total_pendapatan
-      FROM transaksi t
-      JOIN outlet o ON t.id_outlet = o.id_outlet
-      WHERE t.id_outlet = ? AND MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ? AND t.status = 'selesai'
-      GROUP BY o.nama_outlet
+        COUNT(id_transaksi) AS total_transaksi, 
+        SUM(total_harga) AS total_pendapatan
+      FROM transaksi
+      WHERE id_outlet = ? AND MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
       `,
       params,
     );
 
-    // 2. Query Grafik Harian (Untuk Line Chart)
     const harianQuery = db.query(
       `
       SELECT
@@ -144,39 +209,68 @@ class Laporan {
       params,
     );
 
-    // 3. Query Riwayat Transaksi (Dengan Paginasi LIMIT & OFFSET)
     const riwayatQuery = db.query(
       `
       SELECT 
-        id_transaksi, 
-        DATE_FORMAT(tanggal, '%Y-%m-%d %H:%i:%s') AS waktu_transaksi, 
-        total_harga, 
-        metode_bayar 
-      FROM transaksi
-      WHERE id_outlet = ? AND MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
-      ORDER BY tanggal DESC
+        t.id_transaksi, 
+        DATE_FORMAT(t.tanggal, '%Y-%m-%d %H:%i:%s') AS waktu_transaksi, 
+        t.total_harga, 
+        t.metode_bayar,
+        (
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'nama_produk', p.nama_produk,
+              'jumlah', dt.jumlah,
+              'harga_satuan', dt.harga_satuan,
+              'subtotal', dt.subtotal
+            )
+          )
+          FROM detail_transaksi dt
+          JOIN produk p ON dt.id_produk = p.id_produk
+          WHERE dt.id_transaksi = t.id_transaksi
+        ) AS detail_pembelian
+
+      FROM transaksi t
+      WHERE t.id_outlet = ? AND MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ? AND t.status = 'selesai'
+      ORDER BY t.tanggal DESC
       LIMIT ${limit} OFFSET ${offset}
       `,
       params,
     );
 
-    // Eksekusi ketiga query secara paralel
-    const [[hasilRingkasan], [hasilHarian], [hasilRiwayat]] = await Promise.all(
-      [ringkasanQuery, harianQuery, riwayatQuery],
-    );
+    const [[hasilOutlet], [hasilRingkasan], [hasilHarian], [hasilRiwayat]] =
+      await Promise.all([
+        outletQuery,
+        ringkasanQuery,
+        harianQuery,
+        riwayatQuery,
+      ]);
 
-    // Format kembalian
+    const riwayatTerformat = hasilRiwayat.map((trx) => {
+      let detail = [];
+      try {
+        detail =
+          typeof trx.detail_pembelian === "string"
+            ? JSON.parse(trx.detail_pembelian)
+            : trx.detail_pembelian;
+      } catch (err) {
+        detail = [];
+      }
+
+      return {
+        ...trx,
+        detail_pembelian: detail || [],
+      };
+    });
+
     return {
-      nama_outlet:
-        hasilRingkasan.length > 0 ? hasilRingkasan[0].nama_outlet : null,
+      nama_outlet: hasilOutlet.length > 0 ? hasilOutlet[0].nama_outlet : null,
       ringkasan: {
-        total_transaksi:
-          hasilRingkasan.length > 0 ? hasilRingkasan[0].total_transaksi : 0,
-        total_pendapatan:
-          hasilRingkasan.length > 0 ? hasilRingkasan[0].total_pendapatan : 0,
+        total_transaksi: hasilRingkasan[0].total_transaksi || 0,
+        total_pendapatan: hasilRingkasan[0].total_pendapatan || 0,
       },
-      harian: hasilHarian, // Data mentah grafik, nanti di-padding di controller
-      riwayat: hasilRiwayat, // Array riwayat transaksi berhalaman
+      harian: hasilHarian,
+      riwayat: riwayatTerformat,
     };
   }
 
@@ -191,8 +285,8 @@ class Laporan {
       FROM transaksi t
       JOIN outlet o ON t.id_outlet = o.id_outlet
       WHERE 
-        t.id_outlet = ? 
-        AND YEAR(t.tanggal) = ? 
+        t.id_outlet = ?
+        AND YEAR(t.tanggal) = ?
         AND t.status = 'selesai'
       GROUP BY o.nama_outlet, bulan
       ORDER BY bulan ASC;

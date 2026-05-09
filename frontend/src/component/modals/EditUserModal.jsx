@@ -8,6 +8,7 @@ const EditUserModal = ({ isOpen, onClose, onEdit, initialData }) => {
     role: "kasir",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (initialData) {
@@ -27,12 +28,25 @@ const EditUserModal = ({ isOpen, onClose, onEdit, initialData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!initialData) return;
+
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
-      await onEdit(initialData.id_pengguna, formData);
-      onClose();
+      const result = await onEdit(initialData.id_pengguna, {
+        ...formData,
+        nama: formData.nama.trim(),
+        email: formData.email.trim()
+      });
+      
+      if (result && !result.success) {
+        setErrorMsg(result.error?.response?.data?.message || "Gagal mengedit pengguna");
+      } else {
+        setErrorMsg("");
+        onClose();
+      }
     } catch (error) {
       console.error("Gagal mengedit pengguna:", error);
+      setErrorMsg("Terjadi kesalahan sistem");
     } finally {
       setIsSubmitting(false);
     }
@@ -51,6 +65,11 @@ const EditUserModal = ({ isOpen, onClose, onEdit, initialData }) => {
         </div>
 
         {/* Body */}
+        {errorMsg && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+            {errorMsg}
+          </div>
+        )}
         <form id="editUserForm" onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nama Pengguna */}
@@ -67,7 +86,6 @@ const EditUserModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   name="nama"
                   value={formData.nama}
                   onChange={handleChange}
-                  required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm"
                   placeholder="Masukkan nama pengguna"
                 />
@@ -88,7 +106,6 @@ const EditUserModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm"
                   placeholder="name@example.com"
                 />
@@ -108,7 +125,6 @@ const EditUserModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  required
                   className="appearance-none block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm bg-white"
                 >
                   <option value="kasir">Kasir</option>

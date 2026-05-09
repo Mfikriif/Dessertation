@@ -88,7 +88,6 @@ const createProduk = async (req, res) => {
   }
   try {
     const Idproduk = crypto.randomUUID();
-    const IdStok = crypto.randomUUID();
 
     const produkInstance = new Produk(
       Idproduk,
@@ -123,7 +122,7 @@ const createProduk = async (req, res) => {
         0,
       );
 
-      const result = stokProdukInstance.createInitialStokOutlet();
+      const result = stokProdukInstance.createInitiateStokOutlet();
       console.log(stokInstance);
       console.log("instance: ", stokProdukInstance);
       console.log("hasil: ", result);
@@ -173,7 +172,7 @@ const updateProduk = async (req, res) => {
   const { Idproduk } = req.params;
 
   if (!id_kategori || !nama_produk || !deskripsi || !harga) {
-    return res.status(400).json({
+    return res.status(401).json({
       message: `Semua kolom wajib diisi`,
       status: `Bad Request`,
     });

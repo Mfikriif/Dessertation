@@ -15,7 +15,8 @@ import DeleteProductModal from "../../../component/modals/DeleteProductModal";
 
 const ProductList = () => {
   const { kategori } = useKategori();
-  const { produk, fetchProduk, addProduk, editProduk, deleteProduk } = useProduk();
+  const { produk, fetchProduk, addProduk, editProduk, deleteProduk } =
+    useProduk();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -45,35 +46,14 @@ const ProductList = () => {
     fetchProduk(categoryId || null);
   };
 
-  const handleAddProduk = async (data) => {
-    const result = await addProduk(data);
-    if (!result.success) {
-      throw result.error;
-    }
-  };
-
   const handleEditClick = (item) => {
     setSelectedProduct(item);
     setIsEditModalOpen(true);
   };
 
-  const handleEditProduk = async (id, data) => {
-    const result = await editProduk(id, data);
-    if (!result.success) {
-      throw result.error;
-    }
-  };
-
   const handleDeleteClick = (item) => {
     setSelectedDeleteProduct(item);
     setIsDeleteModalOpen(true);
-  };
-
-  const handleDeleteProduk = async (id) => {
-    const result = await deleteProduk(id);
-    if (!result.success) {
-      throw result.error;
-    }
   };
 
   return (
@@ -93,19 +73,32 @@ const ProductList = () => {
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Filter className="w-4 h-4 text-gray-500" />
             </div>
-            <select 
+            <select
               onChange={(e) => handleFilterChange(e.target.value)}
               className="appearance-none pl-9 pr-8 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent font-medium text-sm transition-colors shadow-sm cursor-pointer min-w-[160px]"
             >
               <option value="">SEMUA KATEGORI</option>
-              {Array.isArray(kategori) && kategori.map((kat) => (
-                <option key={kat.id_kategori} value={kat.id_kategori}>
-                  {kat.nama_kategori.toUpperCase()}
-                </option>
-              ))}
+              {Array.isArray(kategori) &&
+                kategori.map((kat) => (
+                  <option key={kat.id_kategori} value={kat.id_kategori}>
+                    {kat.nama_kategori.toUpperCase()}
+                  </option>
+                ))}
             </select>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
             </div>
           </div>
           <button
@@ -130,10 +123,10 @@ const ProductList = () => {
                 <th className="px-6 py-4 font-medium tracking-wider">
                   KATEGORI
                 </th>
+                <th className="px-6 py-4 font-medium tracking-wider">HARGA</th>
                 <th className="px-6 py-4 font-medium tracking-wider">
                   DESKRIPSI
                 </th>
-                <th className="px-6 py-4 font-medium tracking-wider">HARGA</th>
                 <th className="px-6 py-4 font-medium tracking-wider text-center">
                   AKSI
                 </th>
@@ -160,8 +153,12 @@ const ProductList = () => {
                           {item.nama_kategori}
                         </span>
                       </td>
-                      <td className="px-6 py-4">{item.deskripsi}</td>
-                      <td className="px-6 py-4">{item.harga}</td>
+                      <td className="px-6 py-4">
+                        Rp {Number(item.harga).toLocaleString("id-ID")}
+                      </td>
+                      <td className="px-6 py-4 max-w-[300px] text-ellipsis overflow-hidden whitespace">
+                        {item.deskripsi}
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -251,7 +248,7 @@ const ProductList = () => {
       <AddProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAdd={handleAddProduk}
+        onAdd={addProduk}
       />
 
       <EditProductModal
@@ -260,7 +257,7 @@ const ProductList = () => {
           setIsEditModalOpen(false);
           setSelectedProduct(null);
         }}
-        onEdit={handleEditProduk}
+        onEdit={editProduk}
         initialData={selectedProduct}
       />
 
@@ -270,7 +267,7 @@ const ProductList = () => {
           setIsDeleteModalOpen(false);
           setSelectedDeleteProduct(null);
         }}
-        onDelete={handleDeleteProduk}
+        onDelete={deleteProduk}
         productData={selectedDeleteProduct}
       />
     </div>

@@ -4,7 +4,6 @@ const crypto = require("crypto");
 
 const createPenggunaan = async (req, res) => {
   const { id_bahan_baku, jumlah_digunakan, catatan } = req.body;
-
   console.log(req.body);
   try {
     if (!id_bahan_baku || !jumlah_digunakan || !catatan) {
@@ -26,10 +25,23 @@ const createPenggunaan = async (req, res) => {
       catatan,
       tanggalPenggunaan,
     );
-    const penggunaan = penggunaanInstance.create();
+    const stokBahanBaku = new StokBahanBaku(null, id_bahan_baku);
+    const stok = await stokBahanBaku.getStokById();
+    console.log("Stok: ", stok);
+    console.log("Jumlah digunakan: ", jumlah_digunakan);
 
+    if (Number(stok.jumlah_stok) < Number(jumlah_digunakan)) {
+      return res.status(400).json({
+        message: `Stok tidak mencukupi`,
+        status: `Bad request`,
+      });
+    }
+    const penggunaan = await penggunaanInstance.create();
     const StokInstance = new StokBahanBaku();
-    const updateStok = StokInstance.updateStok(jumlah_digunakan, id_bahan_baku);
+    const updateStok = await StokInstance.updateStok(
+      jumlah_digunakan,
+      id_bahan_baku,
+    );
 
     return res.status(201).json({
       message: `Penggunaan berhasil di catat`,

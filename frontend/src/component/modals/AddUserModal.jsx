@@ -13,6 +13,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showValidasiPassword, setShowValidasiPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,26 +22,39 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (formData.password !== formData.validasiPassword) {
-      toast.error("Password dan Validasi Password tidak cocok!");
+      setErrorMsg("Password dan Validasi Password tidak cocok!");
       return;
     }
 
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
       // Destructure to exclude validasiPassword from the payload
       const { validasiPassword, ...payload } = formData;
-      await onAdd(payload);
-      setFormData({
-        nama: "",
-        email: "",
-        password: "",
-        validasiPassword: "",
-        role: "kasir",
+      const result = await onAdd({
+        ...payload,
+        nama: payload.nama.trim(),
+        email: payload.email.trim()
       });
-      onClose();
+      
+      if (result && !result.success) {
+        setErrorMsg(result.error?.response?.data?.message || "Gagal menambahkan pengguna");
+      } else {
+        setFormData({
+          nama: "",
+          email: "",
+          password: "",
+          validasiPassword: "",
+          role: "kasir",
+        });
+        setErrorMsg("");
+        onClose();
+      }
     } catch (error) {
       console.error("Gagal menambahkan pengguna:", error);
+      setErrorMsg("Terjadi kesalahan sistem");
     } finally {
       setIsSubmitting(false);
     }
@@ -59,6 +73,11 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
         </div>
 
         {/* Body */}
+        {errorMsg && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+            {errorMsg}
+          </div>
+        )}
         <form id="addUserForm" onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nama Pengguna */}
@@ -75,7 +94,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                   name="nama"
                   value={formData.nama}
                   onChange={handleChange}
-                  required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm"
                   placeholder="Masukkan nama pengguna"
                 />
@@ -96,7 +114,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm"
                   placeholder="name@example.com"
                 />
@@ -114,7 +131,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  required
                   className="block w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm pr-10"
                   placeholder="••••••••"
                 />
@@ -145,7 +161,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  required
                   className="appearance-none block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm bg-white"
                 >
                   <option value="kasir">Kasir</option>
@@ -181,7 +196,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                   name="validasiPassword"
                   value={formData.validasiPassword}
                   onChange={handleChange}
-                  required
                   className="block w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-sm pr-10"
                   placeholder="••••••••"
                 />

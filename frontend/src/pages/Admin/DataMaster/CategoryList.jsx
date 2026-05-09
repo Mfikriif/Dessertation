@@ -10,30 +10,23 @@ import {
 import { useKategori } from "../../../hooks/useKategori";
 import EditCategoryModal from "../../../component/modals/EditCategoryModal";
 import AddCategoryModal from "../../../component/modals/AddCategoryModal";
+import DeleteCategoryModal from "../../../component/modals/DeleteCategoryModal";
 
 const CategoryList = () => {
-  const { kategori, editKategori, addKategori } = useKategori();
+  const { kategori, editKategori, addKategori, deleteKategori } = useKategori();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-
-  const handleAddKategori = async (data) => {
-    const result = await addKategori(data);
-    if (!result.success) {
-      throw result.error;
-    }
-  };
 
   const handleEditClick = (cat) => {
     setSelectedCategory(cat);
     setIsEditModalOpen(true);
   };
 
-  const handleEditKategori = async (id, data) => {
-    const result = await editKategori(id, data);
-    if (!result.success) {
-      throw result.error;
-    }
+  const handleDeleteClick = (cat) => {
+    setSelectedCategory(cat);
+    setIsDeleteModalOpen(true);
   };
 
   return (
@@ -53,7 +46,7 @@ const CategoryList = () => {
             <Filter className="w-4 h-4" />
             FILTER
           </button>
-          <button 
+          <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-lg hover:bg-gray-800 font-medium text-sm transition-colors shadow-sm"
           >
@@ -67,13 +60,21 @@ const CategoryList = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
         {/* Table Area */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
+          <table className="w-full text-left text-sm text-gray-600 table-fixed">
             <thead className="text-xs text-gray-400 uppercase bg-gray-50/50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 font-medium tracking-wider w-16">NO</th>
-                <th className="px-6 py-4 font-medium tracking-wider w-48">KODE KATEGORI</th>
-                <th className="px-6 py-4 font-medium tracking-wider">NAMA KATEGORI</th>
-                <th className="px-6 py-4 font-medium tracking-wider text-center w-32">AKSI</th>
+                <th className="px-6 py-4 font-medium tracking-wider w-[10%]">
+                  NO
+                </th>
+                <th className="px-6 py-4 font-medium tracking-wider w-[25%]">
+                  KODE KATEGORI
+                </th>
+                <th className="px-6 py-4 font-medium tracking-wider w-[50%]">
+                  NAMA KATEGORI
+                </th>
+                <th className="px-6 py-4 font-medium tracking-wider text-center w-[15%]">
+                  AKSI
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -87,18 +88,19 @@ const CategoryList = () => {
                     <td className="px-6 py-4 font-medium text-gray-800">
                       {item.kode_kategori}
                     </td>
-                    <td className="px-6 py-4">
-                      {item.nama_kategori}
-                    </td>
+                    <td className="px-6 py-4">{item.nama_kategori}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleEditClick(item)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md border border-gray-200 hover:border-transparent transition-all"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 hover:border-transparent transition-all">
+                        <button
+                          onClick={() => handleDeleteClick(item)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 hover:border-transparent transition-all"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -139,7 +141,7 @@ const CategoryList = () => {
       <AddCategoryModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddKategori}
+        onAdd={addKategori}
       />
 
       <EditCategoryModal
@@ -148,8 +150,18 @@ const CategoryList = () => {
           setIsEditModalOpen(false);
           setSelectedCategory(null);
         }}
-        onEdit={handleEditKategori}
+        onEdit={editKategori}
         initialData={selectedCategory}
+      />
+
+      <DeleteCategoryModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        onDelete={deleteKategori}
+        categoryData={selectedCategory}
       />
     </div>
   );

@@ -58,5 +58,29 @@ export const useKategori = () => {
     }
   };
 
-  return { kategori, isLoading, error, fetchKategori, editKategori, addKategori };
+  const deleteKategori = async (id) => {
+    try {
+      setIsLoading(true);
+      await kategoriService.deleteKategori(id);
+      await fetchKategori();
+      toast.success("Kategori berhasil dihapus!");
+      return { success: true };
+    } catch (err) {
+      console.error("Error deleting kategori:", err);
+      toast.error(err?.response?.data?.message || "Gagal menghapus kategori");
+      return { success: false, error: err };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    kategori,
+    isLoading,
+    error,
+    fetchKategori,
+    editKategori,
+    addKategori,
+    deleteKategori,
+  };
 };

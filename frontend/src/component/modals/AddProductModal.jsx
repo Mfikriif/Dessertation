@@ -11,6 +11,7 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
     deskripsi: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,18 +20,30 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
-      await onAdd(formData);
-      setFormData({
-        nama_produk: "",
-        id_kategori: "",
-        harga: "",
-        deskripsi: "",
+      const result = await onAdd({
+        ...formData,
+        nama_produk: formData.nama_produk.trim(),
+        deskripsi: formData.deskripsi.trim()
       });
-      onClose();
+      if (result && !result.success) {
+        setErrorMsg(result.error?.response?.data?.message || "Gagal menambahkan produk");
+      } else {
+        setFormData({
+          nama_produk: "",
+          id_kategori: "",
+          harga: "",
+          deskripsi: "",
+        });
+        setErrorMsg("");
+        onClose();
+      }
     } catch (error) {
       console.error("Gagal menambahkan produk:", error);
+      setErrorMsg("Terjadi kesalahan sistem");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,6 +69,11 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto">
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+              {errorMsg}
+            </div>
+          )}
           <form
             id="addProductForm"
             onSubmit={handleSubmit}
@@ -76,7 +94,6 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
                     name="nama_produk"
                     value={formData.nama_produk}
                     onChange={handleChange}
-                    required
                     className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black outline-none transition-all text-sm"
                     placeholder="Masukkan nama produk"
                   />
@@ -96,7 +113,6 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
                     name="id_kategori"
                     value={formData.id_kategori}
                     onChange={handleChange}
-                    required
                     className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black outline-none transition-all text-sm appearance-none bg-white font-medium text-gray-600 cursor-pointer"
                     disabled={isLoadingKategori}
                   >
@@ -142,7 +158,6 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
                   name="harga"
                   value={formData.harga}
                   onChange={handleChange}
-                  required
                   min="0"
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black outline-none transition-all text-sm"
                   placeholder="0"
@@ -159,7 +174,6 @@ const AddProductModal = ({ isOpen, onClose, onAdd }) => {
                 name="deskripsi"
                 value={formData.deskripsi}
                 onChange={handleChange}
-                required
                 rows={4}
                 className="block w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black outline-none transition-all text-sm resize-none"
                 placeholder="Masukkan deskripsi produk"
