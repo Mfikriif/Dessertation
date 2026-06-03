@@ -13,6 +13,13 @@ const createPenggunaan = async (req, res) => {
       });
     }
 
+    if (Number(jumlah_digunakan) <= 0) {
+      return res.status(400).json({
+        message: `Jumlah digunakan harus lebih dari 0`,
+        status: `Bad request`,
+      });
+    }
+
     const Idpengguna = req.user.id_pengguna;
     console.log(Idpengguna);
     const Idpenggunaan = crypto.randomUUID();

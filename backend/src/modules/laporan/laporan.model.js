@@ -23,15 +23,31 @@ class Laporan {
 
   async getLaporanBulanan(limit = 10, offset = 0) {
     const params = [this.periode_bulan, this.periode_tahun];
+    const ringkasanParams = [
+      this.periode_bulan,
+      this.periode_tahun,
+      this.periode_bulan,
+      this.periode_tahun,
+      this.periode_bulan,
+      this.periode_tahun,
+    ];
     const ringkasanQuery = db.query(
       `
       SELECT 
-      COUNT(id_transaksi) AS total_transaksi,
-      SUM(total_harga) AS total_pendapatan
-      FROM transaksi
-      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai' 
+        (SELECT COUNT(id_transaksi) 
+         FROM transaksi 
+         WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+        ) AS total_transaksi,
+        (SELECT SUM(total_harga) 
+         FROM transaksi 
+         WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+        ) AS total_pendapatan,
+        (SELECT SUM(biaya) 
+         FROM pengeluaran 
+         WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ?
+        ) AS total_pengeluaran
       `,
-      params,
+      ringkasanParams,
     );
 
     const harianQuery = db.query(
@@ -77,8 +93,24 @@ class Laporan {
       params,
     );
 
-    const [[hasilRingkasan], [hasilHarian], [hasilRiwayat]] = await Promise.all(
-      [ringkasanQuery, harianQuery, riwayatQuery],
+    const pengeluaranQuery = db.query(
+      `
+      SELECT 
+        p.id_pengeluaran,
+        DATE_FORMAT(p.tanggal, '%Y-%m-%d') AS tanggal,
+        p.biaya,
+        p.deskripsi,
+        pe.nama AS nama_pengguna
+      FROM pengeluaran p
+      LEFT JOIN pengguna pe ON pe.id_pengguna = p.id_pengguna
+      WHERE MONTH(p.tanggal) = ? AND YEAR(p.tanggal) = ?
+      ORDER BY p.tanggal DESC
+      `,
+      params,
+    );
+
+    const [[hasilRingkasan], [hasilHarian], [hasilRiwayat], [hasilPengeluaran]] = await Promise.all(
+      [ringkasanQuery, harianQuery, riwayatQuery, pengeluaranQuery],
     );
 
     // Parsing JSON String dari MySQL menjadi Array JavaScript
@@ -102,9 +134,11 @@ class Laporan {
       ringkasan: {
         total_transaksi: hasilRingkasan[0].total_transaksi || 0,
         total_pendapatan: hasilRingkasan[0].total_pendapatan || 0,
+        total_pengeluaran: hasilRingkasan[0].total_pengeluaran || 0,
       },
       harian: hasilHarian,
       riwayat: riwayatTerformat,
+      pengeluaran: hasilPengeluaran,
     };
   }
 

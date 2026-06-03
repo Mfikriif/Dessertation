@@ -27,10 +27,14 @@ export const useLaporan = () => {
   const [ringkasan, setRingkasan] = useState({
     total_transaksi: 0,
     total_pendapatan: 0,
+    total_pengeluaran: 0,
   });
 
   // Data for transaction history table (sudah terpaginasi dari server)
   const [riwayatList, setRiwayatList] = useState([]);
+
+  // Data for expenditure list
+  const [pengeluaranList, setPengeluaranList] = useState([]);
 
   // Server-side pagination info
   const [paginasi, setPaginasi] = useState({
@@ -69,9 +73,11 @@ export const useLaporan = () => {
         setRingkasan({
           total_transaksi: laporanData.ringkasan?.total_transaksi || 0,
           total_pendapatan: laporanData.ringkasan?.total_pendapatan || 0,
+          total_pengeluaran: laporanData.ringkasan?.total_pengeluaran || 0,
         });
         // Parse detail_pembelian dari setiap riwayat
         setRiwayatList(parseRiwayat(laporanData.riwayat));
+        setPengeluaranList(laporanData.pengeluaran || []);
         setPaginasi({
           halaman_saat_ini: resData.halaman_saat_ini || page,
           batas_per_halaman: resData.batas_per_halaman || limit,
@@ -80,8 +86,9 @@ export const useLaporan = () => {
         });
       } catch (err) {
         // 404 = no data, just reset
-        setRingkasan({ total_transaksi: 0, total_pendapatan: 0 });
+        setRingkasan({ total_transaksi: 0, total_pendapatan: 0, total_pengeluaran: 0 });
         setRiwayatList([]);
+        setPengeluaranList([]);
         setPaginasi({ halaman_saat_ini: 1, batas_per_halaman: limit, total_riwayat: 0, total_halaman: 0 });
         if (err?.response?.status !== 404) {
           console.error("Error fetching laporan bulanan:", err);
@@ -125,10 +132,12 @@ export const useLaporan = () => {
         setRingkasan({
           total_transaksi: data.data?.ringkasan?.total_transaksi || 0,
           total_pendapatan: data.data?.ringkasan?.total_pendapatan || 0,
+          total_pengeluaran: data.data?.ringkasan?.total_pengeluaran || 0,
         });
         setChartDetail(data.data?.grafik || []);
         // Riwayat dari API outlet sudah termasuk detail_pembelian
         setRiwayatList(data.data?.riwayat || []);
+        setPengeluaranList([]);
         setPaginasi({
           halaman_saat_ini: pagInfo.halaman_saat_ini || page,
           batas_per_halaman: pagInfo.batas_per_halaman || limit,
@@ -137,8 +146,9 @@ export const useLaporan = () => {
         });
       } catch (err) {
         if (err?.response?.status === 404) {
-          setRingkasan({ total_transaksi: 0, total_pendapatan: 0 });
+          setRingkasan({ total_transaksi: 0, total_pendapatan: 0, total_pengeluaran: 0 });
           setRiwayatList([]);
+          setPengeluaranList([]);
           setChartDetail([]);
           setNamaOutlet("");
           setPaginasi({ halaman_saat_ini: 1, batas_per_halaman: limit, total_riwayat: 0, total_halaman: 0 });
@@ -169,16 +179,19 @@ export const useLaporan = () => {
         setRingkasan({
           total_transaksi: laporanData.ringkasan?.total_transaksi || 0,
           total_pendapatan: laporanData.ringkasan?.total_pendapatan || 0,
+          total_pengeluaran: laporanData.ringkasan?.total_pengeluaran || 0,
         });
         setTopOutlets(laporanData.detail_outlet || []);
         
         // No paginasi / riwayat for tahunan
         setRiwayatList([]);
+        setPengeluaranList([]);
         setPaginasi({ halaman_saat_ini: 1, batas_per_halaman: 7, total_riwayat: 0, total_halaman: 0 });
       } catch (err) {
-        setRingkasan({ total_transaksi: 0, total_pendapatan: 0 });
+        setRingkasan({ total_transaksi: 0, total_pendapatan: 0, total_pengeluaran: 0 });
         setTopOutlets([]);
         setRiwayatList([]);
+        setPengeluaranList([]);
         setPaginasi({ halaman_saat_ini: 1, batas_per_halaman: 7, total_riwayat: 0, total_halaman: 0 });
       }
 
@@ -215,13 +228,15 @@ export const useLaporan = () => {
          total_pendapatan += parseFloat(item.total_pendapatan) || 0;
       });
 
-      setRingkasan({ total_transaksi, total_pendapatan });
+      setRingkasan({ total_transaksi, total_pendapatan, total_pengeluaran: 0 });
       setTopOutlets([]);
       setRiwayatList([]);
+      setPengeluaranList([]);
       setPaginasi({ halaman_saat_ini: 1, batas_per_halaman: 7, total_riwayat: 0, total_halaman: 0 });
     } catch (err) {
-      setRingkasan({ total_transaksi: 0, total_pendapatan: 0 });
+      setRingkasan({ total_transaksi: 0, total_pendapatan: 0, total_pengeluaran: 0 });
       setRiwayatList([]);
+      setPengeluaranList([]);
       setChartDetail([]);
       setTopOutlets([]);
       setNamaOutlet("");
@@ -270,6 +285,7 @@ export const useLaporan = () => {
   return {
     ringkasan,
     riwayatList,
+    pengeluaranList,
     chartDetail,
     namaOutlet,
     topOutlets,

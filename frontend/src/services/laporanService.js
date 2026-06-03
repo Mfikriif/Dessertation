@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const laporanService = {
   // OLD APIs (kept for backward compatibility)
@@ -64,3 +65,14 @@ export const laporanService = {
     return await API.get(url, { responseType: "blob" });
   },
 };
+
+// Menambahkan metode polling dengan interval 5 detik untuk GET data laporan
+laporanService.pollLaporanHarian = withPolling(laporanService.getLaporanHarian, 5000);
+laporanService.pollTopProdukHarian = withPolling(laporanService.getTopProdukHarian, 5000);
+laporanService.pollAllTransaksi = withPolling(laporanService.getAllTransaksi, 5000);
+laporanService.pollLaporanBulanan = withPolling(laporanService.getLaporanBulanan, 5000);
+laporanService.pollDetailBulanan = withPolling(laporanService.getDetailBulanan, 5000);
+laporanService.pollDetailBulananOutlet = withPolling(laporanService.getDetailBulananOutlet, 5000);
+laporanService.pollLaporanTahunan = withPolling(laporanService.getLaporanTahunan, 5000);
+laporanService.pollDetailTahunan = withPolling(laporanService.getDetailTahunan, 5000);
+laporanService.pollDetailTahunanOutlet = withPolling(laporanService.getDetailTahunanOutlet, 5000);

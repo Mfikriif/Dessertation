@@ -15,6 +15,16 @@ class Produk {
     this.deskripsi = deskripsi;
     this.harga = harga;
   }
+  async countTotalProduk() {
+    const [rows] = await pool.query(
+      `
+      SELECT
+        COUNT(p.id_produk) AS total_produk 
+        FROM produk p 
+      `,
+    );
+    return rows[0];
+  }
 
   async getAll() {
     const [rows] = await pool.query(

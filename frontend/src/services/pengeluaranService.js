@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const pengeluaranService = {
   getAll: async () => {
@@ -20,3 +21,5 @@ export const pengeluaranService = {
     return response.data;
   },
 };
+
+pengeluaranService.pollGetAll = withPolling(pengeluaranService.getAll, 5000);

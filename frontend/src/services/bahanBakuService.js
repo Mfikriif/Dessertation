@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const bahanBakuService = {
   getAll: async () => {
@@ -28,3 +29,8 @@ export const bahanBakuService = {
     return response.data;
   },
 };
+
+// Menambahkan metode polling dengan interval 5 detik untuk operasi GET
+bahanBakuService.pollAll = withPolling(bahanBakuService.getAll, 5000);
+bahanBakuService.pollById = withPolling(bahanBakuService.getById, 5000);
+bahanBakuService.pollSearch = withPolling(bahanBakuService.search, 5000);

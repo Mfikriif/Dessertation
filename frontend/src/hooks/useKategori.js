@@ -23,7 +23,21 @@ export const useKategori = () => {
   };
 
   useEffect(() => {
-    fetchKategori();
+    const stopPolling = kategoriService.pollGetAllKategori((err, response) => {
+      if (err) {
+        if (err?.response?.status === 404) {
+          setKategori([]);
+        } else {
+          setError(err);
+          console.error("Error polling kategori:", err);
+        }
+      } else {
+        setKategori(response.data?.data || []);
+        setError(null);
+      }
+      setIsLoading(false);
+    });
+    return () => stopPolling();
   }, []);
 
   const editKategori = async (id, data) => {

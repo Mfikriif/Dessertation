@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const penggunaService = {
   getAllPengguna: async () => {
@@ -21,3 +22,5 @@ export const penggunaService = {
     return await API.put(`/pengguna/update-password/${id}`, { password });
   },
 };
+
+penggunaService.pollGetAllPengguna = withPolling(penggunaService.getAllPengguna, 5000);

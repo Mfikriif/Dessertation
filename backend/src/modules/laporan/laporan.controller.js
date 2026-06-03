@@ -10,10 +10,13 @@ const getLaporanBulanan = async (req, res) => {
     const laporanBulanan = new Laporan(null, null, null, null, bulan, tahun);
     const laporan = await laporanBulanan.getLaporanBulanan(limit, offset);
 
-    if (laporan.ringkasan.total_transaksi === 0) {
+    if (
+      Number(laporan.ringkasan.total_transaksi) === 0 &&
+      Number(laporan.ringkasan.total_pengeluaran) === 0
+    ) {
       return res.status(404).json({
         message: `Laporan tidak tersedia`,
-        status: `Not foung`,
+        status: `Not found`,
       });
     }
 
@@ -451,6 +454,77 @@ const createExcelFile = async (req, res) => {
             selUang.numFmt = formatRupiah;
           }
         });
+      }
+
+      // sheet baru hanya jika !Idoutlet (untuk keseluruhan outlet) dan dataLaporan.pengeluaran tersedia
+      if (!Idoutlet && dataLaporan.pengeluaran) {
+        const expenseSheet = workbook.addWorksheet("Laporan Pengeluaran", {
+          views: [{ showGridLines: false }],
+        });
+
+        expenseSheet.columns = [
+          { header: "Tanggal", key: "tanggal", width: 15 },
+          { header: "Deskripsi Pengeluaran", key: "deskripsi", width: 35 },
+          { header: "Dicatat Oleh", key: "nama_pengguna", width: 20 },
+          { header: "Biaya", key: "biaya", width: 18 },
+        ];
+
+        let totalPengeluaranSum = 0;
+        dataLaporan.pengeluaran.forEach((exp) => {
+          const biayaVal = parseFloat(exp.biaya) || 0;
+          totalPengeluaranSum += biayaVal;
+          expenseSheet.addRow({
+            tanggal: exp.tanggal || "",
+            deskripsi: exp.deskripsi || "",
+            nama_pengguna: exp.nama_pengguna || "",
+            biaya: biayaVal,
+          });
+        });
+
+        // Add Total Row
+        const totalRow = expenseSheet.addRow({
+          tanggal: "TOTAL",
+          deskripsi: "",
+          nama_pengguna: "",
+          biaya: totalPengeluaranSum,
+        });
+        totalRow.font = { bold: true };
+
+        // Styling the header row (Row 1)
+        const expHeaderRow = expenseSheet.getRow(1);
+        expHeaderRow.height = 25;
+        expHeaderRow.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FF203764" },
+          };
+          cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+        });
+
+        // Styling the data and total rows
+        const formatRupiahPattern = '"Rp" #,##0.00;[Red]-"Rp" #,##0.00';
+        for (let i = 2; i <= dataLaporan.pengeluaran.length + 2; i++) {
+          const row = expenseSheet.getRow(i);
+          row.eachCell((cell) => {
+            cell.border = {
+              top: { style: "thin", color: { argb: "FFBFBFBF" } },
+              left: { style: "thin", color: { argb: "FFBFBFBF" } },
+              bottom: { style: "thin", color: { argb: "FFBFBFBF" } },
+              right: { style: "thin", color: { argb: "FFBFBFBF" } },
+            };
+            cell.alignment = { vertical: "middle" };
+          });
+          const biayaCell = row.getCell(4);
+          biayaCell.numFmt = formatRupiahPattern;
+        }
       }
     } else {
       if (!dataLaporan) {

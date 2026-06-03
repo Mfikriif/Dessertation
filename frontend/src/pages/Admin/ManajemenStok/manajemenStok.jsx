@@ -17,8 +17,13 @@ import EditBahanBakuModal from "../../../component/modals/EditBahanBakuModal";
 import DeleteBahanBakuModal from "../../../component/modals/DeleteBahanBakuModal";
 
 const ManajemenStok = () => {
-  const { bahanBakuList, addBahanBaku, editBahanBaku, deleteBahanBaku, fetchBahanBaku } =
-    useBahanBaku();
+  const {
+    bahanBakuList,
+    addBahanBaku,
+    editBahanBaku,
+    deleteBahanBaku,
+    fetchBahanBaku,
+  } = useBahanBaku();
   const { addPenggunaan, isLoading: isAddingPenggunaan } = usePenggunaanBb();
 
   // Modal states
@@ -379,7 +384,7 @@ const ManajemenStok = () => {
 
             <div>
               <label className="block text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
-                Catatan (Opsional)
+                Catatan (Wajib)
               </label>
               <input
                 type="text"

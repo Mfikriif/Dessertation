@@ -1,12 +1,12 @@
 import React from "react";
-import { TrendingUp, Receipt } from "lucide-react";
+import { TrendingUp, Receipt, TrendingDown } from "lucide-react";
 
-const SummaryCards = ({ ringkasan, selectedBulanLabel, selectedTahun, formatCurrency }) => {
+const SummaryCards = ({ ringkasan, selectedBulanLabel, selectedTahun, formatCurrency, isBulananAllOutlets }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className={`grid grid-cols-1 ${isBulananAllOutlets ? "md:grid-cols-3" : "md:grid-cols-2"} gap-6`}>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold text-gray-400 tracking-wider mb-1 uppercase">
+          <p className="text-[13px] font-bold text-gray-400 tracking-wider mb-1 uppercase">
             Total Pendapatan {selectedBulanLabel} {selectedTahun}
           </p>
           <span className="text-3xl font-bold text-gray-900">
@@ -20,7 +20,7 @@ const SummaryCards = ({ ringkasan, selectedBulanLabel, selectedTahun, formatCurr
 
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold text-gray-400 tracking-wider mb-1 uppercase">
+          <p className="text-[13px] font-bold text-gray-400 tracking-wider mb-1 uppercase">
             Total Transaksi {selectedBulanLabel} {selectedTahun}
           </p>
           <span className="text-4xl font-bold text-gray-900">
@@ -31,6 +31,22 @@ const SummaryCards = ({ ringkasan, selectedBulanLabel, selectedTahun, formatCurr
           <Receipt className="w-6 h-6 text-white" />
         </div>
       </div>
+
+      {isBulananAllOutlets && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-[13px] font-bold text-gray-400 tracking-wider mb-1 uppercase">
+              Total Pengeluaran {selectedBulanLabel} {selectedTahun}
+            </p>
+            <span className="text-3xl font-bold text-gray-900">
+              {formatCurrency(ringkasan.total_pengeluaran)}
+            </span>
+          </div>
+          <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
+            <TrendingDown className="w-6 h-6 text-white" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

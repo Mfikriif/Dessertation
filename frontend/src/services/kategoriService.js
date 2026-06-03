@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const kategoriService = {
   getAllKategori: async () => {
@@ -17,3 +18,5 @@ export const kategoriService = {
     return await API.delete(`/kategori/delete/${id}`);
   },
 };
+
+kategoriService.pollGetAllKategori = withPolling(kategoriService.getAllKategori, 5000);

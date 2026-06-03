@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verifyToken, admin } = require("../auth/auth.middleware");
 
 const {
   getAllBahanbaku,
@@ -12,12 +13,22 @@ const {
   kurangiStokBahanBaku,
 } = require("./bahanbaku.controller");
 
-router.get("/", getAllBahanbaku);
-router.get("/id/:Idbahanbaku", getBahanBakuById);
-router.get("/search", getBahanBakuByName);
-router.post("/", createBahanBaku);
-router.put("/update/:Idbahanbaku", updateBahanBaku);
-router.delete("/delete/:Idbahanbaku", deleteBahanBaku);
-router.post("/tambah-stok/:Idbahanbaku", tambahStokBahanBaku);
-router.post("/kurang-stok/:Idbahanbaku", kurangiStokBahanBaku);
+router.get("/", verifyToken, admin, getAllBahanbaku);
+router.get("/id/:Idbahanbaku", verifyToken, admin, getBahanBakuById);
+router.get("/search", verifyToken, admin, getBahanBakuByName);
+router.post("/", verifyToken, admin, createBahanBaku);
+router.put("/update/:Idbahanbaku", verifyToken, admin, updateBahanBaku);
+router.delete("/delete/:Idbahanbaku", verifyToken, admin, deleteBahanBaku);
+router.post(
+  "/tambah-stok/:Idbahanbaku",
+  verifyToken,
+  admin,
+  tambahStokBahanBaku,
+);
+router.post(
+  "/kurang-stok/:Idbahanbaku",
+  verifyToken,
+  admin,
+  kurangiStokBahanBaku,
+);
 module.exports = router;

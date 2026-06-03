@@ -7,6 +7,17 @@ class Bahanbaku {
     this.satuan = satuan;
   }
 
+  async getBahanBakuMenipis() {
+    const [rows] = await pool.query(`
+    SELECT 
+       COUNT(s.jumlah_stok) AS total_bahan_baku_menipis
+       FROM stok_bahan_baku s
+       JOIN bahan_baku b ON b.id_bahan_baku = s.id_bahan_baku
+       WHERE s.jumlah_stok <= (s.stok_minimum * 1.5)
+   `);
+    return rows[0];
+  }
+
   async getAll() {
     const [rows] = await pool.query(
       `SELECT 
@@ -15,7 +26,7 @@ class Bahanbaku {
        s.stok_minimum,
        CASE 
          WHEN s.jumlah_stok < s.stok_minimum THEN 'Kritis'
-         WHEN s.jumlah_stok >= s.stok_minimum AND s.jumlah_stok <= (s.stok_minimum + 5) THEN 'Menipis'
+         WHEN s.jumlah_stok >= s.stok_minimum AND s.jumlah_stok <= (s.stok_minimum * 1.5) THEN 'Menipis'
          ELSE 'Optimal'
        END AS status_stok
      FROM bahan_baku b 

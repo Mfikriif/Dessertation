@@ -6,7 +6,6 @@ const getAllBahanbaku = async (req, res) => {
   try {
     const bahanBakuInstance = new Bahanbaku();
     const bahanBaku = await bahanBakuInstance.getAll();
-    const optimalStok = 15;
 
     console.log(bahanBaku);
     if (bahanBaku.length === 0) {
@@ -15,30 +14,16 @@ const getAllBahanbaku = async (req, res) => {
       });
     }
 
-    if (bahanBaku.jumlah_stok <= bahanBaku.stok_minimum) {
-      const statusBahanBaku = "KRITIS";
-    } else if (
-      bahanBaku.jumlah_stok > bahanBaku.stok_minimum &&
-      bahanBaku.jumlah_stok < optimalStok
-    ) {
-      const statusBahanBaku = "MENIPIS";
-    } else if (bahanBaku.jumlah_stok >= optimalStok) {
-      const statusBahanBaku = "OPTIMAL";
-    }
+    const formattedBahanBaku = bahanBaku.map((bb) => ({
+      ...bb,
+      jumlah_stok: bb.jumlah_stok !== null && bb.jumlah_stok !== undefined ? Number(bb.jumlah_stok) : bb.jumlah_stok,
+      stok_minimum: bb.stok_minimum !== null && bb.stok_minimum !== undefined ? Number(bb.stok_minimum) : bb.stok_minimum,
+    }));
 
-    const data = bahanBaku.map((bb) => {
-      return {
-        id_bahan_baku: bb.id_bahan_baku,
-        nama_bahan: bb.nama_bahan,
-        satuan: bb.satuan,
-        jumlah_stok: bb.jumlah_stok,
-        stok_minimum: bb.stok_minimum,
-      };
-    });
     return res.status(200).json({
       message: `Data bahan baku berhasil diambil`,
       status: `Success`,
-      data: bahanBaku,
+      data: formattedBahanBaku,
     });
   } catch (error) {
     console.error("Error getAllBahanbaku: ", error);
@@ -59,6 +44,16 @@ const getBahanBakuById = async (req, res) => {
         message: `Data tidak tersedia`,
       });
     }
+
+    if (bahanBaku) {
+      if (bahanBaku.jumlah_stok !== null && bahanBaku.jumlah_stok !== undefined) {
+        bahanBaku.jumlah_stok = Number(bahanBaku.jumlah_stok);
+      }
+      if (bahanBaku.stok_minimum !== null && bahanBaku.stok_minimum !== undefined) {
+        bahanBaku.stok_minimum = Number(bahanBaku.stok_minimum);
+      }
+    }
+
     return res.status(200).json({
       message: `Data berhasil diambil`,
       status: `Success`,
@@ -94,8 +89,8 @@ const getBahanBakuByName = async (req, res) => {
         id_bahan_baku: bb.id_bahan_baku,
         nama_bahan: bb.nama_bahan,
         satuan: bb.satuan,
-        jumlah_stok: bb.jumlah_stok,
-        stok_minimum: bb.stok_minimum,
+        jumlah_stok: bb.jumlah_stok !== null && bb.jumlah_stok !== undefined ? Number(bb.jumlah_stok) : bb.jumlah_stok,
+        stok_minimum: bb.stok_minimum !== null && bb.stok_minimum !== undefined ? Number(bb.stok_minimum) : bb.stok_minimum,
       };
     });
     return res.status(200).json({
@@ -120,6 +115,12 @@ const createBahanBaku = async (req, res) => {
     });
   }
 
+  if (stok_minimum < 0) {
+    return res.status(400).json({
+      message: "Stok minimum tidak boleh negatif",
+    });
+  }
+
   try {
     const Idbahanbaku = crypto.randomUUID();
     const bahanBakuInstance = new Bahanbaku(Idbahanbaku, nama_bahan, satuan);
@@ -141,9 +142,9 @@ const createBahanBaku = async (req, res) => {
         id_bahan_baku: Idbahanbaku,
         id_stok_bb: Idstokbahanbaku,
         nama_bahan,
-        jumlah_stok: initialJumlahStok,
+        jumlah_stok: Number(initialJumlahStok),
         satuan,
-        stok_minimum,
+        stok_minimum: Number(stok_minimum),
       },
     });
   } catch (error) {

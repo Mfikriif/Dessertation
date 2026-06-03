@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const outletService = {
   getAllOutlet: async () => {
@@ -17,3 +18,5 @@ export const outletService = {
     return await API.delete(`/outlet/delete/${id}`);
   },
 };
+
+outletService.pollGetAllOutlet = withPolling(outletService.getAllOutlet, 5000);

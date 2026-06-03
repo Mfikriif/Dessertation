@@ -27,7 +27,21 @@ export const usePengguna = () => {
   };
 
   useEffect(() => {
-    fetchPengguna();
+    const stopPolling = penggunaService.pollGetAllPengguna((err, response) => {
+      if (err) {
+        if (err?.response?.status === 404) {
+          setPengguna([]);
+        } else {
+          setError(err);
+          console.error("Error polling pengguna:", err);
+        }
+      } else {
+        setPengguna(response.data?.data || []);
+        setError(null);
+      }
+      setIsLoading(false);
+    });
+    return () => stopPolling();
   }, []);
 
   const addPengguna = async (data) => {

@@ -12,6 +12,13 @@ const createPengeluaran = async (req, res) => {
       status: `Bad request`,
     });
   }
+
+  if (Number(biaya) <= 0) {
+    return res.status(401).json({
+      message: `Biaya harus lebih dari 0`,
+      status: `Bad request`,
+    });
+  }
   try {
     const pengeluaranInstance = new Pengeluaran(
       Idpengeluaran,

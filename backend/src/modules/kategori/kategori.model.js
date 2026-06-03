@@ -7,6 +7,17 @@ class kategori {
     this.nama_kategori = nama_kategori;
   }
 
+  async getTotalKategori() {
+    const [rows] = await pool.query(
+      `
+      SELECT
+        COUNT(k.id_kategori) AS total_kategori
+        FROM kategori k
+      `,
+    );
+    return rows[0];
+  }
+
   async getAll() {
     const [rows] = await pool.query(`SELECT * FROM kategori`);
     return rows;

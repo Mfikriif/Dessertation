@@ -26,7 +26,25 @@ export const useBahanBaku = () => {
   };
 
   useEffect(() => {
-    fetchBahanBaku();
+    // Menggunakan fitur polling yang memanggil getAll setiap 5 detik
+    const stopPolling = bahanBakuService.pollAll((err, response) => {
+      if (err) {
+        if (err?.response?.status === 404) {
+          setBahanBakuList([]);
+        } else {
+          setError(err);
+          console.error("Error polling bahan baku:", err);
+        }
+      } else {
+        setBahanBakuList(response.data?.data || []);
+        setError(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      stopPolling();
+    };
   }, []);
 
   const addBahanBaku = async (data) => {

@@ -31,6 +31,18 @@ class PenggunaanBahanBaku {
     );
     return rows;
   }
+
+  async getPenggunaan() {
+    const [rows] = await pool.query(
+      `
+      SELECT pb.jumlah_digunakan, pb.catatan, pb.created_at, b.nama_bahan, b.satuan
+        FROM penggunaan_bahan_baku pb
+        JOIN bahan_baku b ON b.id_bahan_baku = pb.id_bahan_baku
+        ORDER BY pb.created_at DESC
+      `,
+    );
+    return rows;
+  }
 }
 
 module.exports = PenggunaanBahanBaku;

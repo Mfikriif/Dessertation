@@ -23,7 +23,21 @@ export const useOutlet = () => {
   };
 
   useEffect(() => {
-    fetchOutlet();
+    const stopPolling = outletService.pollGetAllOutlet((err, response) => {
+      if (err) {
+        if (err?.response?.status === 404) {
+          setOutlet([]);
+        } else {
+          setError(err);
+          console.error("Error polling outlet:", err);
+        }
+      } else {
+        setOutlet(response.data?.data || []);
+        setError(null);
+      }
+      setIsLoading(false);
+    });
+    return () => stopPolling();
   }, []);
 
   const addOutlet = async (data) => {

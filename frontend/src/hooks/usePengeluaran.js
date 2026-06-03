@@ -26,7 +26,21 @@ export const usePengeluaran = () => {
   };
 
   useEffect(() => {
-    fetchPengeluaran();
+    const stopPolling = pengeluaranService.pollGetAll((err, response) => {
+      if (err) {
+        if (err?.response?.status === 404) {
+          setPengeluaranList([]);
+        } else {
+          setError(err);
+          console.error("Error polling pengeluaran:", err);
+        }
+      } else {
+        setPengeluaranList(response.data?.data || []);
+        setError(null);
+      }
+      setIsLoading(false);
+    });
+    return () => stopPolling();
   }, []);
 
   const addPengeluaran = async (data) => {

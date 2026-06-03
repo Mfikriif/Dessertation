@@ -212,3 +212,39 @@ exports.getTransaksiById = async (id) => {
 
   return transaksi;
 };
+
+exports.getPendapatanDanPengluaran = async (bulan, tahun) => {
+  const [rows] = await db.query(
+    `
+      SELECT 
+      (SELECT SUM(total_harga) 
+      FROM transaksi 
+      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      ) AS total_pendapatan,
+      
+      (SELECT SUM(biaya) 
+      FROM pengeluaran 
+      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ?
+      ) AS total_pengeluaran; 
+    `,
+    [bulan, tahun, bulan, tahun],
+  );
+
+  return rows[0];
+};
+
+exports.getPerformaBulanIni = async (bulan, tahun) => {
+  const [rows] = await db.query(
+    `
+      SELECT 
+        DATE(tanggal) AS tanggal_transaksi,
+        SUM(total_harga) AS total_pendapatan
+      FROM transaksi
+      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      GROUP BY DATE(tanggal)
+      ORDER BY DATE(tanggal) ASC
+    `,
+    [bulan, tahun]
+  );
+  return rows;
+};

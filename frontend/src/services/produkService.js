@@ -1,4 +1,5 @@
 import API from "../config/api";
+import { withPolling } from "./pollingService";
 
 export const produkService = {
   getAllProduk: async () => {
@@ -36,3 +37,6 @@ export const produkService = {
     }
   },
 };
+
+produkService.pollGetAllProduk = withPolling(produkService.getAllProduk, 5000);
+produkService.pollGetProdukByIdKategori = withPolling(produkService.getProdukByIdKategori, 5000);

@@ -6,8 +6,10 @@ export const useProduk = () => {
   const [produk, setProduk] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
 
   const fetchProduk = async (categoryId = null) => {
+    setActiveCategoryId(categoryId);
     try {
       setIsLoading(true);
       setError(null);
@@ -35,8 +37,27 @@ export const useProduk = () => {
   };
 
   useEffect(() => {
-    fetchProduk();
-  }, []);
+    const callback = (err, response) => {
+      if (err) {
+        if (err?.response?.status === 404) {
+          setProduk([]);
+        } else {
+          setError(err);
+          console.error("Error polling produk:", err);
+        }
+      } else {
+        setProduk(response.data?.data || []);
+        setError(null);
+      }
+      setIsLoading(false);
+    };
+
+    const stopPolling = activeCategoryId
+      ? produkService.pollGetProdukByIdKategori(callback, activeCategoryId)
+      : produkService.pollGetAllProduk(callback);
+
+    return () => stopPolling();
+  }, [activeCategoryId]);
 
   const addProduk = async (data) => {
     try {

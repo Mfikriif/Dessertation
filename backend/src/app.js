@@ -20,6 +20,7 @@ const penggunaanBbRoutes = require("./modules/penggunaan_bahan_baku/penggunaan_b
 const transaksiRoutes = require("./modules/Transaksi/transaksi.routes");
 const laporanRoutes = require("./modules/laporan/laporan.routes");
 const pengeluaranRoutes = require("./modules/pengeluaran/pengeluaran.routes");
+const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
 
 app.use(
   cors({
@@ -52,6 +53,7 @@ app.use("/api/penggunaan-bb", penggunaanBbRoutes);
 app.use("/api/transaksi", transaksiRoutes);
 app.use("/api/laporan", laporanRoutes);
 app.use("/api/pengeluaran", pengeluaranRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

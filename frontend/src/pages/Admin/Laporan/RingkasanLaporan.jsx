@@ -26,6 +26,7 @@ const Laporan = () => {
   const {
     ringkasan,
     riwayatList,
+    pengeluaranList,
     chartDetail,
     namaOutlet,
     topOutlets,
@@ -224,6 +225,7 @@ const Laporan = () => {
         selectedBulanLabel={selectedBulanLabel}
         selectedTahun={selectedTahun}
         formatCurrency={formatCurrency}
+        isBulananAllOutlets={selectedBulan !== "" && selectedOutlet === ""}
       />
 
       <ChartSection
@@ -242,6 +244,7 @@ const Laporan = () => {
         namaOutlet={namaOutlet}
         chartDetail={chartDetail}
         currentData={currentData}
+        pengeluaranList={pengeluaranList}
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalItems}
