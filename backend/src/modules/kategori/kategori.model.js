@@ -1,10 +1,23 @@
 const pool = require("../../config/db");
 
 class kategori {
+  #id_kategori;
+  #kode_kategori;
+  #nama_kategori;
+
   constructor(id_kategori, kode_kategori, nama_kategori) {
-    this.id_kategori = id_kategori;
-    this.kode_kategori = kode_kategori;
-    this.nama_kategori = nama_kategori;
+    this.#id_kategori = id_kategori;
+    this.#kode_kategori = kode_kategori;
+    this.#nama_kategori = nama_kategori;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_kategori: this.#id_kategori,
+      kode_kategori: this.#kode_kategori,
+      nama_kategori: this.#nama_kategori,
+    };
   }
 
   async getTotalKategori() {
@@ -26,7 +39,7 @@ class kategori {
   async create() {
     const rows = await pool.query(
       `INSERT INTO kategori (id_kategori, kode_kategori, nama_kategori) VALUES (?,?,?)`,
-      [this.id_kategori, this.kode_kategori, this.nama_kategori],
+      [this.#id_kategori, this.#kode_kategori, this.#nama_kategori],
     );
     return rows;
   }
@@ -34,7 +47,7 @@ class kategori {
   async update() {
     const [rows] = await pool.query(
       `UPDATE kategori SET kode_kategori = ? , nama_kategori = ? WHERE id_kategori = ?`,
-      [this.kode_kategori, this.nama_kategori, this.id_kategori],
+      [this.#kode_kategori, this.#nama_kategori, this.#id_kategori],
     );
     return rows;
   }
@@ -42,7 +55,7 @@ class kategori {
   async delete() {
     const [rows] = await pool.query(
       `DELETE FROM kategori WHERE id_kategori = ?`,
-      [this.id_kategori],
+      [this.#id_kategori],
     );
     return rows;
   }

@@ -1,17 +1,32 @@
 const pool = require("../../config/db");
 
 class StokBahanBaku {
+  #id_stok_bb;
+  #id_bahan_baku;
+  #jumlah_stok;
+  #stok_minimum;
+
   constructor(id_stok_bb, id_bahan_baku, jumlah_stok, stok_minimum) {
-    this.id_stok_bb = id_stok_bb;
-    this.id_bahan_baku = id_bahan_baku;
-    this.jumlah_stok = jumlah_stok;
-    this.stok_minimum = stok_minimum;
+    this.#id_stok_bb = id_stok_bb;
+    this.#id_bahan_baku = id_bahan_baku;
+    this.#jumlah_stok = jumlah_stok;
+    this.#stok_minimum = stok_minimum;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_stok_bb: this.#id_stok_bb,
+      id_bahan_baku: this.#id_bahan_baku,
+      jumlah_stok: this.#jumlah_stok,
+      stok_minimum: this.#stok_minimum,
+    };
   }
 
   async getStokById() {
     const [rows] = await pool.query(
       `SELECT * FROM stok_bahan_baku WHERE id_bahan_baku = ?`,
-      [this.id_bahan_baku],
+      [this.#id_bahan_baku],
     );
     return rows[0];
   }
@@ -20,10 +35,10 @@ class StokBahanBaku {
     const [rows] = await pool.query(
       "INSERT INTO stok_bahan_baku ( id_stok_bb , id_bahan_baku, jumlah_stok, stok_minimum) VALUES (?, ?, ?, ?)",
       [
-        this.id_stok_bb,
-        this.id_bahan_baku,
-        this.jumlah_stok,
-        this.stok_minimum,
+        this.#id_stok_bb,
+        this.#id_bahan_baku,
+        this.#jumlah_stok,
+        this.#stok_minimum,
       ],
     );
     return rows;

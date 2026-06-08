@@ -1,10 +1,23 @@
 const pool = require("../../config/db");
 
 class Bahanbaku {
+  #id_bahan_baku;
+  #nama_bahan;
+  #satuan;
+
   constructor(id_bahan_baku, nama_bahan, satuan) {
-    this.id_bahan_baku = id_bahan_baku;
-    this.nama_bahan = nama_bahan;
-    this.satuan = satuan;
+    this.#id_bahan_baku = id_bahan_baku;
+    this.#nama_bahan = nama_bahan;
+    this.#satuan = satuan;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_bahan_baku: this.#id_bahan_baku,
+      nama_bahan: this.#nama_bahan,
+      satuan: this.#satuan,
+    };
   }
 
   async getBahanBakuMenipis() {
@@ -41,7 +54,7 @@ class Bahanbaku {
        FROM bahan_baku b 
        LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku 
        WHERE b.id_bahan_baku = ? `,
-      [this.id_bahan_baku],
+      [this.#id_bahan_baku],
     );
     return rows[0];
   }
@@ -52,7 +65,7 @@ class Bahanbaku {
        FROM bahan_baku b 
        LEFT JOIN stok_bahan_baku s ON b.id_bahan_baku = s.id_bahan_baku 
        WHERE b.nama_bahan LIKE ?`,
-      [`%${this.nama_bahan}%`],
+      [`%${this.#nama_bahan}%`],
     );
     return rows;
   }
@@ -60,7 +73,7 @@ class Bahanbaku {
   async create() {
     const [rows] = await pool.query(
       "INSERT INTO bahan_baku (id_bahan_baku, nama_bahan, satuan) VALUES (?, ?, ?)",
-      [this.id_bahan_baku, this.nama_bahan, this.satuan],
+      [this.#id_bahan_baku, this.#nama_bahan, this.#satuan],
     );
     return rows;
   }
@@ -68,7 +81,7 @@ class Bahanbaku {
   async update() {
     const [rows] = await pool.query(
       "UPDATE bahan_baku SET nama_bahan = ?, satuan = ? WHERE id_bahan_baku = ?",
-      [this.nama_bahan, this.satuan, this.id_bahan_baku],
+      [this.#nama_bahan, this.#satuan, this.#id_bahan_baku],
     );
     return rows;
   }
@@ -77,14 +90,14 @@ class Bahanbaku {
     // Delete child rows first since they might have RESTRICT constraints
     await pool.query(
       "DELETE FROM penggunaan_bahan_baku WHERE id_bahan_baku = ?",
-      [this.id_bahan_baku],
+      [this.#id_bahan_baku],
     );
     await pool.query("DELETE FROM stok_bahan_baku WHERE id_bahan_baku = ?", [
-      this.id_bahan_baku,
+      this.#id_bahan_baku,
     ]);
     const [rows] = await pool.query(
       "DELETE FROM bahan_baku WHERE id_bahan_baku = ?",
-      [this.id_bahan_baku],
+      [this.#id_bahan_baku],
     );
     return rows;
   }
@@ -93,7 +106,7 @@ class Bahanbaku {
   async tambahStok(jumlah) {
     const [rows] = await pool.query(
       `SELECT jumlah_stok FROM stok_bahan_baku WHERE id_bahan_baku = ?`,
-      [this.id_bahan_baku],
+      [this.#id_bahan_baku],
     );
 
     if (rows.length === 0) {
@@ -101,7 +114,7 @@ class Bahanbaku {
       await pool.query(
         `INSERT INTO stok_bahan_baku (id_bahan_baku, jumlah_stok)
        VALUES (?, ?)`,
-        [this.id_bahan_baku, jumlah],
+        [this.#id_bahan_baku, jumlah],
       );
     } else {
       // kalau sudah ada → update
@@ -109,7 +122,7 @@ class Bahanbaku {
         `UPDATE stok_bahan_baku
        SET jumlah_stok = jumlah_stok + ?
        WHERE id_bahan_baku = ?`,
-        [jumlah, this.id_bahan_baku],
+        [jumlah, this.#id_bahan_baku],
       );
     }
 
@@ -120,7 +133,7 @@ class Bahanbaku {
   async kurangiStok(jumlah) {
     const [rows] = await pool.query(
       `SELECT jumlah_stok FROM stok_bahan_baku WHERE id_bahan_baku = ?`,
-      [this.id_bahan_baku],
+      [this.#id_bahan_baku],
     );
 
     if (rows.length === 0) {
@@ -137,7 +150,7 @@ class Bahanbaku {
       `UPDATE stok_bahan_baku
      SET jumlah_stok = jumlah_stok - ?
      WHERE id_bahan_baku = ?`,
-      [jumlah, this.id_bahan_baku],
+      [jumlah, this.#id_bahan_baku],
     );
 
     return true;

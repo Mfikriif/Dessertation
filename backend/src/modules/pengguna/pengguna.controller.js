@@ -4,7 +4,8 @@ const crypto = require("crypto");
 
 const getAllPengguna = async (req, res) => {
   try {
-    const pengguna = await Pengguna.getAll();
+    const penggunaInstance = new Pengguna();
+    const pengguna = await penggunaInstance.getAll();
     if (pengguna.length === 0) {
       return res
         .status(404)

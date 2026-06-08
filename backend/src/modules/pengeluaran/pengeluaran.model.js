@@ -1,23 +1,40 @@
 const pool = require("../../config/db");
 
 class Pengeluaran {
+  #id_pengeluaran;
+  #id_pengguna;
+  #tanggal;
+  #biaya;
+  #deskripsi;
+
   constructor(id_pengeluaran, id_pengguna, tanggal, biaya, deskripsi) {
-    this.id_pengeluaran = id_pengeluaran;
-    this.id_pengguna = id_pengguna;
-    this.tanggal = tanggal;
-    this.biaya = biaya;
-    this.deskripsi = deskripsi;
+    this.#id_pengeluaran = id_pengeluaran;
+    this.#id_pengguna = id_pengguna;
+    this.#tanggal = tanggal;
+    this.#biaya = biaya;
+    this.#deskripsi = deskripsi;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_pengeluaran: this.#id_pengeluaran,
+      id_pengguna: this.#id_pengguna,
+      tanggal: this.#tanggal,
+      biaya: this.#biaya,
+      deskripsi: this.#deskripsi,
+    };
   }
 
   async create() {
     const [rows] = await pool.query(
       `INSERT INTO pengeluaran (id_pengeluaran, id_pengguna, tanggal, biaya, deskripsi) VALUES (?,?,?,?,?)`,
       [
-        this.id_pengeluaran,
-        this.id_pengguna,
-        this.tanggal,
-        this.biaya,
-        this.deskripsi,
+        this.#id_pengeluaran,
+        this.#id_pengguna,
+        this.#tanggal,
+        this.#biaya,
+        this.#deskripsi,
       ],
     );
     return rows;
@@ -41,7 +58,7 @@ class Pengeluaran {
     SET tanggal = ?, biaya = ?, deskripsi = ?
     WHERE id_pengeluaran = ?
     `,
-      [this.tanggal, this.biaya, this.deskripsi, this.id_pengeluaran],
+      [this.#tanggal, this.#biaya, this.#deskripsi, this.#id_pengeluaran],
     );
 
     return rows;
@@ -50,7 +67,7 @@ class Pengeluaran {
   async delete() {
     const [rows] = await pool.query(
       `DELETE FROM pengeluaran WHERE id_pengeluaran = ?`,
-      [this.id_pengeluaran],
+      [this.#id_pengeluaran],
     );
     return rows;
   }

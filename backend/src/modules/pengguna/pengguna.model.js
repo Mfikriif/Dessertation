@@ -1,12 +1,29 @@
 const pool = require("../../config/db");
 
 class Pengguna {
+  #id_pengguna;
+  #nama;
+  #email;
+  #password;
+  #role;
+
   constructor(id_pengguna, nama, email, password = null, role) {
-    this.id_pengguna = id_pengguna;
-    this.nama = nama;
-    this.email = email;
-    this.password = password;
-    this.role = role;
+    this.#id_pengguna = id_pengguna;
+    this.#nama = nama;
+    this.#email = email;
+    this.#password = password;
+    this.#role = role;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_pengguna: this.#id_pengguna,
+      nama: this.#nama,
+      email: this.#email,
+      password: this.#password,
+      role: this.#role,
+    };
   }
 
   static async findByName(nama) {
@@ -28,7 +45,7 @@ class Pengguna {
   async getPenggunaById() {
     const [rows] = await pool.query(
       "SELECT nama, email, role FROM pengguna WHERE id_pengguna = ?",
-      [this.id_pengguna],
+      [this.#id_pengguna],
     );
     return rows[0];
   }
@@ -36,12 +53,12 @@ class Pengguna {
   async getPenggunaByRole() {
     const [rows] = await pool.query(
       "SELECT id_pengguna, nama, email, role FROM pengguna WHERE role = ? AND is_active = 1",
-      [this.role],
+      [this.#role],
     );
     return rows;
   }
 
-  static async getAll() {
+  async getAll() {
     const [rows] = await pool.query(
       "SELECT id_pengguna, nama, email, role FROM pengguna WHERE is_active = 1",
     );
@@ -52,7 +69,7 @@ class Pengguna {
   async create() {
     const [result] = await pool.query(
       "INSERT INTO pengguna (id_pengguna, nama, email, password, role) VALUES (?, ?, ?, ?, ?)",
-      [this.id_pengguna, this.nama, this.email, this.password, this.role],
+      [this.#id_pengguna, this.#nama, this.#email, this.#password, this.#role],
     );
     return result;
   }
@@ -60,7 +77,7 @@ class Pengguna {
   async updatePassword() {
     const [rows] = await pool.query(
       "UPDATE pengguna SET password = ? WHERE id_pengguna = ?",
-      [this.password, this.id_pengguna],
+      [this.#password, this.#id_pengguna],
     );
     return rows;
   }
@@ -68,7 +85,7 @@ class Pengguna {
   async update() {
     const [rows] = await pool.query(
       "UPDATE pengguna SET nama = ?, email = ?, role = ? WHERE id_pengguna = ?",
-      [this.nama, this.email, this.role, this.id_pengguna],
+      [this.#nama, this.#email, this.#role, this.#id_pengguna],
     );
     return rows;
   }
@@ -76,7 +93,7 @@ class Pengguna {
   async delete() {
     const [rows] = await pool.query(
       "UPDATE pengguna SET is_active = 0 WHERE id_pengguna = ?",
-      [this.id_pengguna],
+      [this.#id_pengguna],
     );
     return rows;
   }

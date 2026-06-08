@@ -1,6 +1,13 @@
 const pool = require("../../config/db");
 
 class PenggunaanBahanBaku {
+  #id_penggunaan;
+  #id_bahan_baku;
+  #id_pengguna;
+  #jumlah_digunakan;
+  #catatan;
+  #tanggal;
+
   constructor(
     id_penggunaan,
     id_bahan_baku,
@@ -9,24 +16,36 @@ class PenggunaanBahanBaku {
     catatan,
     tanggal,
   ) {
-    this.id_penggunaan = id_penggunaan;
-    this.id_bahan_baku = id_bahan_baku;
-    this.id_pengguna = id_pengguna;
-    this.jumlah_digunakan = jumlah_digunakan;
-    this.catatan = catatan;
-    this.tanggal = tanggal;
+    this.#id_penggunaan = id_penggunaan;
+    this.#id_bahan_baku = id_bahan_baku;
+    this.#id_pengguna = id_pengguna;
+    this.#jumlah_digunakan = jumlah_digunakan;
+    this.#catatan = catatan;
+    this.#tanggal = tanggal;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_penggunaan: this.#id_penggunaan,
+      id_bahan_baku: this.#id_bahan_baku,
+      id_pengguna: this.#id_pengguna,
+      jumlah_digunakan: this.#jumlah_digunakan,
+      catatan: this.#catatan,
+      tanggal: this.#tanggal,
+    };
   }
 
   async create() {
     const [rows] = await pool.query(
       `INSERT INTO penggunaan_bahan_baku (id_penggunaan, id_bahan_baku, id_pengguna, jumlah_digunakan, catatan, tanggal) VALUES (?, ?, ?, ?, ?, ?)`,
       [
-        this.id_penggunaan,
-        this.id_bahan_baku,
-        this.id_pengguna,
-        this.jumlah_digunakan,
-        this.catatan,
-        this.tanggal,
+        this.#id_penggunaan,
+        this.#id_bahan_baku,
+        this.#id_pengguna,
+        this.#jumlah_digunakan,
+        this.#catatan,
+        this.#tanggal,
       ],
     );
     return rows;

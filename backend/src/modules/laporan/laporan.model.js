@@ -1,6 +1,15 @@
 const db = require("../../config/db");
 
 class Laporan {
+  #id_laporan;
+  #id_outlet;
+  #id_pengguna;
+  #jenis_laporan;
+  #periode_bulan;
+  #periode_tahun;
+  #total_pendapatan;
+  #total_pengeluaran;
+
   constructor(
     id_laporan,
     id_outlet,
@@ -11,25 +20,39 @@ class Laporan {
     total_pendapatan,
     total_pengeluaran,
   ) {
-    this.id_laporan = id_laporan;
-    this.id_outlet = id_outlet;
-    this.id_pengguna = id_pengguna;
-    this.jenis_laporan = jenis_laporan;
-    this.periode_bulan = periode_bulan;
-    this.periode_tahun = periode_tahun;
-    this.total_pendapatan = total_pendapatan;
-    this.total_pengeluaran = total_pengeluaran;
+    this.#id_laporan = id_laporan;
+    this.#id_outlet = id_outlet;
+    this.#id_pengguna = id_pengguna;
+    this.#jenis_laporan = jenis_laporan;
+    this.#periode_bulan = periode_bulan;
+    this.#periode_tahun = periode_tahun;
+    this.#total_pendapatan = total_pendapatan;
+    this.#total_pengeluaran = total_pengeluaran;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_laporan: this.#id_laporan,
+      id_outlet: this.#id_outlet,
+      id_pengguna: this.#id_pengguna,
+      jenis_laporan: this.#jenis_laporan,
+      periode_bulan: this.#periode_bulan,
+      periode_tahun: this.#periode_tahun,
+      total_pendapatan: this.#total_pendapatan,
+      total_pengeluaran: this.#total_pengeluaran,
+    };
   }
 
   async getLaporanBulanan(limit = 10, offset = 0) {
-    const params = [this.periode_bulan, this.periode_tahun];
+    const params = [this.#periode_bulan, this.#periode_tahun];
     const ringkasanParams = [
-      this.periode_bulan,
-      this.periode_tahun,
-      this.periode_bulan,
-      this.periode_tahun,
-      this.periode_bulan,
-      this.periode_tahun,
+      this.#periode_bulan,
+      this.#periode_tahun,
+      this.#periode_bulan,
+      this.#periode_tahun,
+      this.#periode_bulan,
+      this.#periode_tahun,
     ];
     const ringkasanQuery = db.query(
       `
@@ -109,9 +132,17 @@ class Laporan {
       params,
     );
 
-    const [[hasilRingkasan], [hasilHarian], [hasilRiwayat], [hasilPengeluaran]] = await Promise.all(
-      [ringkasanQuery, harianQuery, riwayatQuery, pengeluaranQuery],
-    );
+    const [
+      [hasilRingkasan],
+      [hasilHarian],
+      [hasilRiwayat],
+      [hasilPengeluaran],
+    ] = await Promise.all([
+      ringkasanQuery,
+      harianQuery,
+      riwayatQuery,
+      pengeluaranQuery,
+    ]);
 
     // Parsing JSON String dari MySQL menjadi Array JavaScript
     const riwayatTerformat = hasilRiwayat.map((trx) => {
@@ -151,7 +182,7 @@ class Laporan {
       FROM transaksi
       WHERE YEAR(tanggal) = ?
       `,
-      [this.periode_tahun],
+      [this.#periode_tahun],
     );
 
     const [detailOutlet] = await db.query(
@@ -167,7 +198,7 @@ class Laporan {
       GROUP BY t.id_outlet, o.nama_outlet
       ORDER BY total_pendapatan DESC
       `,
-      [this.periode_tahun],
+      [this.#periode_tahun],
     );
 
     return {
@@ -188,7 +219,7 @@ class Laporan {
       GROUP BY tanggal_transaksi
       ORDER BY tanggal_transaksi ASC;
       `,
-      [this.periode_bulan, this.periode_tahun],
+      [this.#periode_bulan, this.#periode_tahun],
     );
     return rows;
   }
@@ -205,17 +236,17 @@ class Laporan {
       GROUP BY MONTH(tanggal)
       ORDER BY bulan ASC
       `,
-      [this.periode_tahun],
+      [this.#periode_tahun],
     );
     return rows;
   }
 
   async getDetailBulananOutlet(limit = 10, offset = 0) {
-    const params = [this.id_outlet, this.periode_bulan, this.periode_tahun];
+    const params = [this.#id_outlet, this.#periode_bulan, this.#periode_tahun];
 
     const outletQuery = db.query(
       "SELECT nama_outlet FROM outlet WHERE id_outlet = ?",
-      [this.id_outlet],
+      [this.#id_outlet],
     );
 
     const ringkasanQuery = db.query(
@@ -325,7 +356,7 @@ class Laporan {
       GROUP BY o.nama_outlet, bulan
       ORDER BY bulan ASC;
       `,
-      [this.id_outlet, this.periode_tahun],
+      [this.#id_outlet, this.#periode_tahun],
     );
     return rows;
   }

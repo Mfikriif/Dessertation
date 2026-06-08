@@ -1,10 +1,23 @@
 const pool = require("../../config/db");
 
 class Outlet {
+  #id_outlet;
+  #nama_outlet;
+  #alamat;
+
   constructor(id_outlet, nama_outlet, alamat) {
-    this.id_outlet = id_outlet;
-    this.nama_outlet = nama_outlet;
-    this.alamat = alamat;
+    this.#id_outlet = id_outlet;
+    this.#nama_outlet = nama_outlet;
+    this.#alamat = alamat;
+  }
+
+  // toJSON serialization helper
+  toJSON() {
+    return {
+      id_outlet: this.#id_outlet,
+      nama_outlet: this.#nama_outlet,
+      alamat: this.#alamat,
+    };
   }
 
   async getAll() {
@@ -15,7 +28,7 @@ class Outlet {
   async create() {
     const [rows] = await pool.query(
       "INSERT INTO outlet (id_outlet, nama_outlet, alamat) VALUES (?, ?, ?)",
-      [this.id_outlet, this.nama_outlet, this.alamat],
+      [this.#id_outlet, this.#nama_outlet, this.#alamat],
     );
     return rows;
   }
@@ -26,7 +39,7 @@ class Outlet {
       await connection.beginTransaction();
       await connection.query(
         `INSERT INTO outlet (id_outlet, nama_outlet, alamat) VALUES (?,?,?)`,
-        [this.id_outlet, this.nama_outlet, this.alamat],
+        [this.#id_outlet, this.#nama_outlet, this.#alamat],
       );
 
       const [produklist] = await connection.query(
@@ -40,7 +53,7 @@ class Outlet {
 
           return connection.query(
             `INSERT INTO stok_outlet (id_stok_outlet, id_produk, id_outlet, jumlah_stok) VALUES (?, ?, ?, ?)`,
-            [IdstokOutlet, prdk.id_produk, this.id_outlet, stokAwal],
+            [IdstokOutlet, prdk.id_produk, this.#id_outlet, stokAwal],
           );
         });
 
@@ -60,7 +73,7 @@ class Outlet {
   async update() {
     const [rows] = await pool.query(
       "UPDATE outlet SET nama_outlet = ?, alamat = ? WHERE id_outlet = ?",
-      [this.nama_outlet, this.alamat, this.id_outlet],
+      [this.#nama_outlet, this.#alamat, this.#id_outlet],
     );
 
     return rows;
@@ -68,7 +81,7 @@ class Outlet {
 
   async delete() {
     const [rows] = await pool.query(`DELETE FROM outlet WHERE id_outlet = ?`, [
-      this.id_outlet,
+      this.#id_outlet,
     ]);
     return rows;
   }
