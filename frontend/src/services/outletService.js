@@ -17,6 +17,10 @@ export const outletService = {
   deleteOutlet: async (id) => {
     return await API.delete(`/outlet/delete/${id}`);
   },
+
+  getOutletStats: async (id) => {
+    return await API.get(`/outlet/${id}/stats`);
+  },
 };
 
 outletService.pollGetAllOutlet = withPolling(outletService.getAllOutlet, 5000);

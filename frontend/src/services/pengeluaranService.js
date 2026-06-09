@@ -2,8 +2,8 @@ import API from "../config/api";
 import { withPolling } from "./pollingService";
 
 export const pengeluaranService = {
-  getAll: async () => {
-    return await API.get("/pengeluaran");
+  getAll: async (params = {}) => {
+    return await API.get("/pengeluaran", { params });
   },
 
   create: async (data) => {

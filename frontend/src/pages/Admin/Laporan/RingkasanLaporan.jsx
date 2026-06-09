@@ -3,9 +3,11 @@ import { useLaporan } from "../../../hooks/useLaporan";
 import { useOutlet } from "../../../hooks/useOutlet";
 import DetailTransaksiModal from "../../../component/modals/DetailTransaksiModal";
 import FilterSection from "./components/FilterSection";
-import SummaryCards from "./components/SummaryCards";
 import ChartSection from "./components/ChartSection";
 import TableSection from "./components/TableSection";
+import LabaRugiCards from "./components/LabaRugiCards";
+import LabaRugiTable from "./components/LabaRugiTable";
+import { useLabaRugi } from "../../../hooks/useLabaRugi";
 
 const BULAN_LIST = [
   { value: "01", label: "Januari" },
@@ -38,6 +40,7 @@ const Laporan = () => {
     fetchLaporanTahunanOutlet,
     exportExcel,
   } = useLaporan();
+  const { dataLabaRugi, isLoading: isLabaRugiLoading, fetchLabaRugi } = useLabaRugi();
   const { outlet } = useOutlet();
 
   const now = new Date();
@@ -53,7 +56,7 @@ const Laporan = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedTransaksi, setSelectedTransaksi] = useState(null);
 
-  // Items per page for server-side pagination
+  // Server-side pagination
   const ITEMS_PER_PAGE = 7;
 
   // Fetch data on mount
@@ -83,6 +86,11 @@ const Laporan = () => {
         fetchLaporanBulanan(selectedBulan, selectedTahun, page, ITEMS_PER_PAGE);
       }
     }
+
+    // Fetch Laba Rugi Data
+    const outletFilter = selectedOutlet === "" ? "all" : selectedOutlet;
+    const bulanFilter = selectedBulan === "" ? "all" : selectedBulan;
+    fetchLabaRugi(bulanFilter, selectedTahun, outletFilter);
   };
 
   const handleExportExcel = () => {
@@ -156,8 +164,8 @@ const Laporan = () => {
   // Helpers
   const formatCurrency = (value) => {
     const num = parseFloat(value);
-    if (isNaN(num)) return "RP 0";
-    return `RP ${num.toLocaleString("id-ID")}`;
+    if (isNaN(num)) return "Rp 0";
+    return `Rp ${num.toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
   };
 
   const formatWaktu = (dateString) => {
@@ -220,12 +228,11 @@ const Laporan = () => {
         yearOptions={yearOptions}
       />
 
-      <SummaryCards
+      <LabaRugiCards
+        dataLabaRugi={dataLabaRugi}
+        isLoading={isLabaRugiLoading}
+        outletFilter={selectedOutlet === "" ? "all" : selectedOutlet}
         ringkasan={ringkasan}
-        selectedBulanLabel={selectedBulanLabel}
-        selectedTahun={selectedTahun}
-        formatCurrency={formatCurrency}
-        isBulananAllOutlets={selectedBulan !== "" && selectedOutlet === ""}
       />
 
       <ChartSection
@@ -236,26 +243,31 @@ const Laporan = () => {
         handleExportExcel={handleExportExcel}
       />
 
+      <LabaRugiTable 
+        dataLabaRugi={dataLabaRugi}
+        isLoading={isLabaRugiLoading}
+      />
+
       <TableSection
-        selectedBulan={selectedBulan}
-        selectedOutlet={selectedOutlet}
-        selectedTahun={selectedTahun}
-        topOutlets={topOutlets}
-        namaOutlet={namaOutlet}
-        chartDetail={chartDetail}
-        currentData={currentData}
-        pengeluaranList={pengeluaranList}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        handlePageChange={handlePageChange}
-        handleLihatDetail={handleLihatDetail}
-        isLoading={isLoading}
-        ITEMS_PER_PAGE={ITEMS_PER_PAGE}
-        formatCurrency={formatCurrency}
-        formatWaktu={formatWaktu}
-        getMetodeBadgeClass={getMetodeBadgeClass}
-        selectedBulanLabel={selectedBulanLabel}
+          selectedBulan={selectedBulan}
+          selectedOutlet={selectedOutlet}
+          selectedTahun={selectedTahun}
+          topOutlets={topOutlets}
+          namaOutlet={namaOutlet}
+          chartDetail={chartDetail}
+          currentData={currentData}
+          pengeluaranList={pengeluaranList}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          handlePageChange={handlePageChange}
+          handleLihatDetail={handleLihatDetail}
+          isLoading={isLoading}
+          ITEMS_PER_PAGE={ITEMS_PER_PAGE}
+          formatCurrency={formatCurrency}
+          formatWaktu={formatWaktu}
+          getMetodeBadgeClass={getMetodeBadgeClass}
+          selectedBulanLabel={selectedBulanLabel}
       />
 
       <DetailTransaksiModal

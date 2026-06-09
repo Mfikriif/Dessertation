@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { pengeluaranService } from "../services/pengeluaranService";
 
-export const usePengeluaran = () => {
+export const usePengeluaran = (filters = {}) => {
   const [pengeluaranList, setPengeluaranList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,7 +11,7 @@ export const usePengeluaran = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await pengeluaranService.getAll();
+      const response = await pengeluaranService.getAll(filters);
       setPengeluaranList(response.data?.data || []);
     } catch (err) {
       if (err?.response?.status === 404) {
@@ -39,9 +39,9 @@ export const usePengeluaran = () => {
         setError(null);
       }
       setIsLoading(false);
-    });
+    }, filters);
     return () => stopPolling();
-  }, []);
+  }, [filters.month, filters.year]);
 
   const addPengeluaran = async (data) => {
     try {

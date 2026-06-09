@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Filter,
   Plus,
@@ -6,6 +7,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { useOutlet } from "../../../hooks/useOutlet";
 import AddOutletModal from "../../../component/modals/AddOutletModal";
@@ -14,6 +16,7 @@ import DeleteOutletModal from "../../../component/modals/DeleteOutletModal";
 
 const OutletList = () => {
   const { outlet, addOutlet, editOutlet, deleteOutlet } = useOutlet();
+  const navigate = useNavigate();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,6 +24,10 @@ const OutletList = () => {
   
   const [selectedOutlet, setSelectedOutlet] = useState(null);
   const [selectedDeleteOutlet, setSelectedDeleteOutlet] = useState(null);
+
+  const handleOpenStats = (otl) => {
+    navigate(`/admin/data-master/outlet/${otl.id_outlet}/stats`, { state: { outlet: otl } });
+  };
 
   const handleAddOutlet = async (data) => {
     const result = await addOutlet(data);
@@ -53,10 +60,10 @@ const OutletList = () => {
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Data Master
+            Manajemen Outlet
           </h1>
           <p className="text-gray-500 mt-1">
-            Kelola Data Master Produk, Kategori, Pengguna, Outlet.
+            Kelola data outlet dan pantau statistik penjualan produk di setiap outlet.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -74,17 +81,17 @@ const OutletList = () => {
         </div>
       </div>
 
-      {/* Main Card */}
+      {/* Main Card / Table List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
         {/* Table Area */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="text-xs text-gray-400 uppercase bg-gray-50/50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 font-medium tracking-wider w-24">NO</th>
+                <th className="px-6 py-4 font-medium tracking-wider w-20">NO</th>
                 <th className="px-6 py-4 font-medium tracking-wider">NAMA OUTLET</th>
                 <th className="px-6 py-4 font-medium tracking-wider">ALAMAT</th>
-                <th className="px-6 py-4 font-medium tracking-wider text-center w-32">
+                <th className="px-6 py-4 font-medium tracking-wider text-center w-56">
                   AKSI
                 </th>
               </tr>
@@ -94,10 +101,12 @@ const OutletList = () => {
                 outlet.map((item, index) => (
                   <tr
                     key={item.id_outlet || index}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50/60 transition-colors"
                   >
-                    <td className="px-6 py-4 text-gray-500">{index + 1}.</td>
-                    <td className="px-6 py-4 font-medium text-gray-800">
+                    <td className="px-6 py-4 text-gray-500">
+                      {index + 1}.
+                    </td>
+                    <td className="px-6 py-4 text-gray-800 font-semibold">
                       {item.nama_outlet}
                     </td>
                     <td className="px-6 py-4">
@@ -105,6 +114,13 @@ const OutletList = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => handleOpenStats(item)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-300 rounded-lg transition-all"
+                        >
+                          <BarChart3 className="w-3.5 h-3.5" />
+                          Statistik
+                        </button>
                         <button 
                           onClick={() => handleEditClick(item)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md border border-gray-200 hover:border-transparent transition-all"

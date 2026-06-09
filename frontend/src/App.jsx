@@ -7,6 +7,7 @@ import ProductList from "./pages/Admin/DataMaster/ProductList";
 import CategoryList from "./pages/Admin/DataMaster/CategoryList";
 import UserList from "./pages/Admin/DataMaster/UserList";
 import OutletList from "./pages/Admin/DataMaster/OutletList";
+import OutletStats from "./pages/Admin/DataMaster/OutletStats";
 import ManajemenStok from "./pages/Admin/ManajemenStok/manajemenStok";
 import CatatanOperasional from "./pages/Admin/CatatanOperasional/catatanOperasional";
 import Laporan from "./pages/Admin/Laporan/RingkasanLaporan";
@@ -40,6 +41,7 @@ function App() {
             <Route path="kategori" element={<CategoryList />} />
             <Route path="pengguna" element={<UserList />} />
             <Route path="outlet" element={<OutletList />} />
+            <Route path="outlet/:Idoutlet/stats" element={<OutletStats />} />
             <Route
               index
               element={<Navigate to="/admin/data-master/produk" replace />}

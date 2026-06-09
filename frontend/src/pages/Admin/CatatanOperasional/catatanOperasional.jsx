@@ -7,13 +7,18 @@ import EditPengeluaranModal from "../../../component/modals/EditPengeluaranModal
 import DeletePengeluaranModal from "../../../component/modals/DeletePengeluaranModal";
 
 const CatatanOperasional = () => {
+  // Filter state
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+
   const {
     pengeluaranList,
     isLoading,
     addPengeluaran,
     editPengeluaran,
     deletePengeluaran,
-  } = usePengeluaran();
+  } = usePengeluaran({ month: selectedMonth, year: selectedYear });
 
   // Modal states
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -26,6 +31,7 @@ const CatatanOperasional = () => {
 
   // Right pane form state
   const [form, setForm] = useState({
+    kategori: "Biaya Operasional",
     tanggal: "",
     biaya: "",
     deskripsi: "",
@@ -45,13 +51,14 @@ const CatatanOperasional = () => {
     e.preventDefault();
 
     const res = await addPengeluaran({
+      kategori: form.kategori,
       tanggal: form.tanggal,
       biaya: parseFloat(form.biaya),
       deskripsi: form.deskripsi,
     });
 
     if (res && res.success) {
-      setForm({ tanggal: "", biaya: "", deskripsi: "" });
+      setForm({ kategori: "Biaya Operasional", tanggal: "", biaya: "", deskripsi: "" });
     }
   };
 
@@ -96,13 +103,44 @@ const CatatanOperasional = () => {
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Main Table */}
-        <div className="lg:col-span-2 w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-50 bg-white">
+        <div className="lg:col-span-3 w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-50 bg-white flex justify-between items-center">
             <h2 className="text-lg font-bold text-gray-900">
               List Pengeluaran
             </h2>
+            <div className="flex gap-2">
+              <select
+                className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg outline-none bg-white text-gray-700 cursor-pointer hover:border-gray-300"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              >
+                <option value={1}>Januari</option>
+                <option value={2}>Februari</option>
+                <option value={3}>Maret</option>
+                <option value={4}>April</option>
+                <option value={5}>Mei</option>
+                <option value={6}>Juni</option>
+                <option value={7}>Juli</option>
+                <option value={8}>Agustus</option>
+                <option value={9}>September</option>
+                <option value={10}>Oktober</option>
+                <option value={11}>November</option>
+                <option value={12}>Desember</option>
+              </select>
+              <select
+                className="px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg outline-none bg-white text-gray-700 cursor-pointer hover:border-gray-300"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+              >
+                {[currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1].map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="overflow-x-auto w-full">
@@ -111,6 +149,7 @@ const CatatanOperasional = () => {
                 <tr>
                   <th className="px-6 py-4 border-b border-gray-50">No</th>
                   <th className="px-6 py-4 border-b border-gray-50">Tanggal</th>
+                  <th className="px-6 py-4 border-b border-gray-50">Kategori</th>
                   <th className="px-6 py-4 border-b border-gray-50">
                     Keterangan
                   </th>
@@ -132,6 +171,9 @@ const CatatanOperasional = () => {
                       <td className="px-6 py-4 text-gray-500">{globalIndex}.</td>
                       <td className="px-6 py-4 text-gray-600 font-medium text-xs">
                         {formatDate(item.tanggal)}
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-800 text-xs">
+                        {item.kategori || "-"}
                       </td>
                       <td className="px-6 py-4 font-semibold text-gray-900 uppercase text-xs tracking-wide">
                         {item.deskripsi}
@@ -242,6 +284,26 @@ const CatatanOperasional = () => {
           </p>
 
           <form onSubmit={handleFormSubmit} className="space-y-5">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
+                Kategori
+              </label>
+              <select
+                className="w-full px-0 py-2 border-b border-gray-200 outline-none text-gray-900 text-sm font-medium focus:border-black transition-colors bg-transparent cursor-pointer appearance-none"
+                value={form.kategori}
+                onChange={(e) =>
+                  setForm({ ...form, kategori: e.target.value })
+                }
+              >
+                <option value="Biaya Operasional">Biaya Operasional</option>
+                <option value="Gaji Karyawan">Gaji Karyawan</option>
+                <option value="Beban Penyusutan">Beban Penyusutan</option>
+                <option value="Biaya Pengemasan">Biaya Pengemasan</option>
+                <option value="Biaya Pemasaran">Biaya Pemasaran</option>
+                <option value="Lain-lain">Lain-lain</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
                 Masukan Tanggal

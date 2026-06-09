@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 
 const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
   const [formData, setFormData] = useState({
+    kategori: "Biaya Operasional",
     tanggal: "",
     biaya: "",
     deskripsi: "",
@@ -12,6 +13,7 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
   useEffect(() => {
     if (isOpen && initialData) {
       setFormData({
+        kategori: initialData.kategori || "Biaya Operasional",
         tanggal: initialData.tanggal
           ? new Date(initialData.tanggal).toISOString().split("T")[0]
           : "",
@@ -26,6 +28,7 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
     e.preventDefault();
     setErrorMsg("");
     const result = await onEdit(initialData.id_pengeluaran, {
+      kategori: formData.kategori,
       tanggal: formData.tanggal,
       biaya: parseFloat(formData.biaya),
       deskripsi: formData.deskripsi,
@@ -98,6 +101,27 @@ const EditPengeluaranModal = ({ isOpen, onClose, onEdit, initialData }) => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Kategori */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Kategori
+              </label>
+              <select
+                className="w-full px-4 py-2.5 border rounded-xl outline-none transition-colors text-sm border-gray-200 focus:border-gray-900 appearance-none bg-white cursor-pointer"
+                value={formData.kategori}
+                onChange={(e) =>
+                  setFormData({ ...formData, kategori: e.target.value })
+                }
+              >
+                <option value="Biaya Operasional">Biaya Operasional</option>
+                <option value="Gaji Karyawan">Gaji Karyawan</option>
+                <option value="Beban Penyusutan">Beban Penyusutan</option>
+                <option value="Biaya Pengemasan">Biaya Pengemasan</option>
+                <option value="Biaya Pemasaran">Biaya Pemasaran</option>
+                <option value="Lain-lain">Lain-lain</option>
+              </select>
             </div>
 
             {/* Keterangan */}

@@ -88,5 +88,16 @@ export const useOutlet = () => {
     }
   };
 
-  return { outlet, isLoading, error, fetchOutlet, addOutlet, editOutlet, deleteOutlet };
+  const fetchOutletStats = async (id) => {
+    try {
+      const response = await outletService.getOutletStats(id);
+      return response.data?.data;
+    } catch (err) {
+      console.error("Error fetching outlet stats:", err);
+      toast.error("Gagal mengambil statistik outlet");
+      return null;
+    }
+  };
+
+  return { outlet, isLoading, error, fetchOutlet, addOutlet, editOutlet, deleteOutlet, fetchOutletStats };
 };
