@@ -119,4 +119,24 @@ const deleteOutlet = async (req, res) => {
   }
 };
 
-module.exports = { getAllOutlet, createOutlet, updateOutlet, deleteOutlet };
+const getOutletStats = async (req, res) => {
+  const { Idoutlet } = req.params;
+
+  try {
+    const outletInstance = new Outlet(Idoutlet);
+    const stats = await outletInstance.getOutletStats();
+
+    return res.status(200).json({
+      message: `Statistik produk outlet berhasil diambil`,
+      status: `Success`,
+      data: stats,
+    });
+  } catch (error) {
+    console.error("Error getOutletStats: ", error);
+    return res.status(500).json({
+      message: `Internal server error`,
+    });
+  }
+};
+
+module.exports = { getAllOutlet, createOutlet, updateOutlet, deleteOutlet, getOutletStats };

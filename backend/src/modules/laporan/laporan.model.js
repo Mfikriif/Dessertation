@@ -434,6 +434,96 @@ class Laporan {
       total_pendapatan: Number(row.total_pendapatan),
     }));
   }
+
+  async getLabaRugi(bulan, tahun, id_outlet = null) {
+    const outletTarget = id_outlet === 'all' ? null : id_outlet;
+    const isTahunan = bulan === 'all' || !bulan;
+
+    const buildQuery = (baseQuery, hasWhere = false) => {
+      let q = baseQuery;
+      let params = [];
+      if (isTahunan) {
+        q += hasWhere ? ` AND YEAR(tanggal) = ?` : ` WHERE YEAR(tanggal) = ?`;
+        params.push(tahun);
+      } else {
+        q += hasWhere ? ` AND MONTH(tanggal) = ? AND YEAR(tanggal) = ?` : ` WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ?`;
+        params.push(bulan, tahun);
+      }
+      return { query: q, params };
+    };
+
+    // 1. Total Pendapatan Seluruh Outlet
+    const pendapatanAll = buildQuery(`SELECT SUM(total_harga) AS total FROM transaksi WHERE status = 'selesai'`, true);
+    const [semuaPendapatan] = await db.query(pendapatanAll.query, pendapatanAll.params);
+    const totalPendapatanSeluruh = parseFloat(semuaPendapatan[0].total) || 0;
+
+    // 1.1 Total Pendapatan Target
+    let totalPendapatanTarget = totalPendapatanSeluruh;
+    if (outletTarget) {
+      const pendapatanOutlet = buildQuery(`SELECT SUM(total_harga) AS total FROM transaksi WHERE id_outlet = ? AND status = 'selesai'`, true);
+      pendapatanOutlet.params.unshift(outletTarget);
+      const [outletPendapatan] = await db.query(pendapatanOutlet.query, pendapatanOutlet.params);
+      totalPendapatanTarget = parseFloat(outletPendapatan[0].total) || 0;
+    }
+
+    // Proporsi (0 s.d. 1)
+    const proporsi = totalPendapatanSeluruh > 0 ? (totalPendapatanTarget / totalPendapatanSeluruh) : 0;
+
+    // 2. Total HPP Pusat
+    const hppQ = buildQuery(`SELECT SUM(jumlah_digunakan * harga_bahan_baku) AS total FROM penggunaan_bahan_baku`, false);
+    const [hpp] = await db.query(hppQ.query, hppQ.params);
+    const hppPusat = parseFloat(hpp[0].total) || 0;
+    const hppTarget = hppPusat * proporsi;
+
+    // 3. Total Pengeluaran Pusat
+    let pengeluaranQ = buildQuery(`SELECT kategori, SUM(biaya) AS total FROM pengeluaran`, false);
+    pengeluaranQ.query += ` GROUP BY kategori`;
+    const [pengeluaran] = await db.query(pengeluaranQ.query, pengeluaranQ.params);
+    
+    const pengeluaranKategori = {};
+    let totalPengeluaranOperasionalTarget = 0;
+    pengeluaran.forEach(row => {
+      const biayaTarget = (parseFloat(row.total) || 0) * proporsi;
+      pengeluaranKategori[row.kategori] = biayaTarget;
+      totalPengeluaranOperasionalTarget += biayaTarget;
+    });
+
+    // 4. Beban Waste
+    let wasteQ = `SELECT SUM(jumlah_stok * harga_produk) AS total FROM stok_outlet`;
+    let wParams = [];
+    let wWhere = [];
+    if (outletTarget) {
+      wWhere.push(`id_outlet = ?`);
+      wParams.push(outletTarget);
+    }
+    if (isTahunan) {
+      wWhere.push(`YEAR(tanggal) = ?`);
+      wParams.push(tahun);
+    } else {
+      wWhere.push(`MONTH(tanggal) = ?`, `YEAR(tanggal) = ?`);
+      wParams.push(bulan, tahun);
+    }
+    if (wWhere.length > 0) wasteQ += ` WHERE ` + wWhere.join(' AND ');
+    
+    const [waste] = await db.query(wasteQ, wParams);
+    const totalWasteTarget = parseFloat(waste[0].total) || 0;
+
+    const totalPengeluaranTarget = hppTarget + totalPengeluaranOperasionalTarget + totalWasteTarget;
+    const labaRugiBersih = totalPendapatanTarget - totalPengeluaranTarget;
+
+    return {
+      pendapatan: parseFloat(totalPendapatanTarget),
+      proporsi: parseFloat(proporsi),
+      pengeluaran: {
+        hpp: parseFloat(hppTarget),
+        waste: parseFloat(totalWasteTarget),
+        operasional: pengeluaranKategori,
+        total_operasional: parseFloat(totalPengeluaranOperasionalTarget)
+      },
+      total_pengeluaran: parseFloat(totalPengeluaranTarget),
+      laba_rugi_bersih: parseFloat(labaRugiBersih)
+    };
+  }
 }
 
 module.exports = Laporan;

@@ -11,8 +11,10 @@ const {
   getDetailBulananOutlet,
   getDetailTahunanOutlet,
   createExcelFile,
+  getLabaRugi,
 } = require("./laporan.controller");
 
+router.get("/laba-rugi", getLabaRugi);
 router.get("/harian", getLaporanHarian);
 router.get("/top-produk", getTopProdukHarian);
 router.get("/bulanan/:bulan/:tahun", getLaporanBulanan);

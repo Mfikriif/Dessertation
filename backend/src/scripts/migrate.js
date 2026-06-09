@@ -78,10 +78,10 @@ const MIGRATE_QUERIES = [
     id_produk      CHAR(36)      NOT NULL,
     id_outlet      CHAR(36)      NOT NULL,
     jumlah_stok    DECIMAL(12,2) NOT NULL DEFAULT 0,
-    updated_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
-                                 ON UPDATE CURRENT_TIMESTAMP,
+    harga_produk   DECIMAL(12,2) NOT NULL DEFAULT 0,
+    tanggal        DATE          NOT NULL,
+    created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_stok_outlet),
-    CONSTRAINT uq_stok_outlet UNIQUE (id_produk, id_outlet),
     CONSTRAINT fk_stok_outlet_produk
       FOREIGN KEY (id_produk) REFERENCES produk (id_produk)
       ON UPDATE CASCADE ON DELETE CASCADE,
@@ -95,6 +95,7 @@ const MIGRATE_QUERIES = [
     id_bahan_baku CHAR(36)     NOT NULL,
     nama_bahan    VARCHAR(150) NOT NULL,
     satuan        ENUM('kg','gram','liter','ml','pcs','lusin','karton') NOT NULL,
+    harga_bahan_baku   DECIMAL(12,2) NOT NULL DEFAULT 0,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_bahan_baku)
   ) ENGINE=InnoDB`,
@@ -117,6 +118,7 @@ const MIGRATE_QUERIES = [
   `CREATE TABLE IF NOT EXISTS pengeluaran (
     id_pengeluaran CHAR(36)      NOT NULL,
     id_pengguna    CHAR(36)      NOT NULL,
+    kategori       ENUM('Biaya Operasional', 'Gaji Karyawan', 'Beban Penyusutan', 'Biaya Pengemasan', 'Biaya Pemasaran', 'Lain-lain') NOT NULL,
     tanggal        DATE          NOT NULL,
     biaya          DECIMAL(14,2) NOT NULL,
     deskripsi      VARCHAR(255),
@@ -133,6 +135,7 @@ const MIGRATE_QUERIES = [
     id_bahan_baku    CHAR(36)      NOT NULL,
     id_pengguna      CHAR(36)      NOT NULL,
     jumlah_digunakan DECIMAL(12,2) NOT NULL,
+    harga_bahan_baku   DECIMAL(12,2) NOT NULL DEFAULT 0,
     catatan          VARCHAR(255),
     tanggal          DATE          NOT NULL,
     created_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,

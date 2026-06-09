@@ -2,13 +2,13 @@ const Pengeluaran = require(`./pengeluaran.model`);
 const crypto = require(`crypto`);
 
 const createPengeluaran = async (req, res) => {
-  const { tanggal, biaya, deskripsi } = req.body;
+  const { kategori, tanggal, biaya, deskripsi } = req.body;
   const Idpengguna = req.user.id_pengguna;
   const Idpengeluaran = crypto.randomUUID();
 
-  if (!tanggal || !biaya || !deskripsi) {
+  if (!kategori || !tanggal || !biaya || !deskripsi) {
     return res.status(401).json({
-      message: `Tanggal, biaya, deskripsi wajib diisi`,
+      message: `Kategori, tanggal, biaya, deskripsi wajib diisi`,
       status: `Bad request`,
     });
   }
@@ -23,6 +23,7 @@ const createPengeluaran = async (req, res) => {
     const pengeluaranInstance = new Pengeluaran(
       Idpengeluaran,
       Idpengguna,
+      kategori,
       tanggal,
       biaya,
       deskripsi,
@@ -50,8 +51,9 @@ const createPengeluaran = async (req, res) => {
 
 const getAllPengeluaran = async (req, res) => {
   try {
+    const { month, year } = req.query;
     const pengeluaranInstance = new Pengeluaran();
-    const pengeluaran = await pengeluaranInstance.getAll();
+    const pengeluaran = await pengeluaranInstance.getAll(month, year);
     console.log(pengeluaran);
     if (pengeluaran.length === 0) {
       return res.status(404).json({
@@ -73,13 +75,13 @@ const getAllPengeluaran = async (req, res) => {
 };
 
 const updatePengeluaran = async (req, res) => {
-  const { tanggal, biaya, deskripsi } = req.body;
+  const { kategori, tanggal, biaya, deskripsi } = req.body;
   const { Idpengeluaran } = req.params;
   const Idpengguna = req.user.id;
   try {
-    if (!tanggal || !biaya || !deskripsi) {
+    if (!kategori || !tanggal || !biaya || !deskripsi) {
       return res.status(401).json({
-        message: `tanggal, biaya, dan deskripsi wajib diisi`,
+        message: `Kategori, tanggal, biaya, dan deskripsi wajib diisi`,
         status: `Bad request`,
       });
     }
@@ -87,6 +89,7 @@ const updatePengeluaran = async (req, res) => {
     const pengeluaranInstance = new Pengeluaran(
       Idpengeluaran,
       Idpengguna,
+      kategori,
       tanggal,
       biaya,
       deskripsi,
