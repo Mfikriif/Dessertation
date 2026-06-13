@@ -46,11 +46,13 @@ exports.insertTransaksi = async (data) => {
 
       total_harga += subtotal;
 
-      // 🔻 update stok
+      // 🔻 update stok (hanya pada snapshot terbaru)
       await connection.execute(
         `UPDATE stok_outlet 
      SET jumlah_stok = jumlah_stok - ? 
-     WHERE id_produk = ? AND id_outlet = ?`,
+     WHERE id_produk = ? AND id_outlet = ?
+     ORDER BY tanggal DESC, created_at DESC
+     LIMIT 1`,
         [item.jumlah, item.id_produk, data.id_outlet],
       );
 

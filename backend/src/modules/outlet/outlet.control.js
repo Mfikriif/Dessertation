@@ -121,10 +121,11 @@ const deleteOutlet = async (req, res) => {
 
 const getOutletStats = async (req, res) => {
   const { Idoutlet } = req.params;
+  const { date } = req.query;
 
   try {
     const outletInstance = new Outlet(Idoutlet);
-    const stats = await outletInstance.getOutletStats();
+    const stats = await outletInstance.getOutletStats(date);
 
     return res.status(200).json({
       message: `Statistik produk outlet berhasil diambil`,

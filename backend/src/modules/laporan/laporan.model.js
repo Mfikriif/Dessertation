@@ -44,30 +44,46 @@ class Laporan {
     };
   }
 
-  async getLaporanBulanan(limit = 10, offset = 0) {
-    const params = [this.#periode_bulan, this.#periode_tahun];
+    async getLaporanBulanan(limit = 10, offset = 0, startDate = null, endDate = null) {
+    let whereClauseTrans = `MONTH(tanggal) = ? AND YEAR(tanggal) = ?`;
+    let whereClausePengeluaran = `MONTH(tanggal) = ? AND YEAR(tanggal) = ?`;
+    let whereClauseTransRiwayat = `MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ?`;
+    let whereClausePengeluaranRiwayat = `MONTH(p.tanggal) = ? AND YEAR(p.tanggal) = ?`;
+    let params = [this.#periode_bulan, this.#periode_tahun];
+
+    if (startDate && endDate) {
+      whereClauseTrans = `DATE(tanggal) >= ? AND DATE(tanggal) <= ?`;
+      whereClausePengeluaran = `DATE(tanggal) >= ? AND DATE(tanggal) <= ?`;
+      whereClauseTransRiwayat = `DATE(t.tanggal) >= ? AND DATE(t.tanggal) <= ?`;
+      whereClausePengeluaranRiwayat = `DATE(p.tanggal) >= ? AND DATE(p.tanggal) <= ?`;
+      params = [startDate, endDate];
+    } else if (startDate) {
+      whereClauseTrans = `DATE(tanggal) = ?`;
+      whereClausePengeluaran = `DATE(tanggal) = ?`;
+      whereClauseTransRiwayat = `DATE(t.tanggal) = ?`;
+      whereClausePengeluaranRiwayat = `DATE(p.tanggal) = ?`;
+      params = [startDate];
+    }
+
     const ringkasanParams = [
-      this.#periode_bulan,
-      this.#periode_tahun,
-      this.#periode_bulan,
-      this.#periode_tahun,
-      this.#periode_bulan,
-      this.#periode_tahun,
+      ...params,
+      ...params,
+      ...params,
     ];
     const ringkasanQuery = db.query(
       `
       SELECT 
         (SELECT COUNT(id_transaksi) 
          FROM transaksi 
-         WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+         WHERE ${whereClauseTrans} AND status = 'selesai'
         ) AS total_transaksi,
         (SELECT SUM(total_harga) 
          FROM transaksi 
-         WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+         WHERE ${whereClauseTrans} AND status = 'selesai'
         ) AS total_pendapatan,
         (SELECT SUM(biaya) 
          FROM pengeluaran 
-         WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ?
+         WHERE ${whereClausePengeluaran}
         ) AS total_pengeluaran
       `,
       ringkasanParams,
@@ -80,7 +96,7 @@ class Laporan {
         COUNT(id_transaksi) AS jumlah_transaksi,
         SUM(total_harga) AS total_pendapatan 
       FROM transaksi
-      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      WHERE ${whereClauseTrans} AND status = 'selesai'
       GROUP BY tanggal_transaksi
       ORDER BY tanggal_transaksi ASC
       `,
@@ -109,7 +125,7 @@ class Laporan {
         ) AS detail_pembelian
 
       FROM transaksi t
-      WHERE MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ? AND t.status = 'selesai'
+      WHERE ${whereClauseTransRiwayat} AND t.status = 'selesai'
       ORDER BY t.tanggal DESC
       LIMIT ${limit} OFFSET ${offset}
       `,
@@ -126,7 +142,7 @@ class Laporan {
         pe.nama AS nama_pengguna
       FROM pengeluaran p
       LEFT JOIN pengguna pe ON pe.id_pengguna = p.id_pengguna
-      WHERE MONTH(p.tanggal) = ? AND YEAR(p.tanggal) = ?
+      WHERE ${whereClausePengeluaranRiwayat}
       ORDER BY p.tanggal DESC
       `,
       params,
@@ -207,7 +223,18 @@ class Laporan {
     };
   }
 
-  async getDetailLaporanBulanan() {
+    async getDetailLaporanBulanan(startDate = null, endDate = null) {
+    let whereClause = `MONTH(tanggal) = ? AND YEAR(tanggal) = ?`;
+    let params = [this.#periode_bulan, this.#periode_tahun];
+
+    if (startDate && endDate) {
+      whereClause = `DATE(tanggal) >= ? AND DATE(tanggal) <= ?`;
+      params = [startDate, endDate];
+    } else if (startDate) {
+      whereClause = `DATE(tanggal) = ?`;
+      params = [startDate];
+    }
+
     const [rows] = await db.query(
       `
       SELECT
@@ -215,11 +242,11 @@ class Laporan {
         COUNT(id_transaksi) AS jumlah_transaksi,
         SUM(total_harga) AS total_pendapatan 
       FROM transaksi
-      WHERE MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      WHERE ${whereClause} AND status = 'selesai'
       GROUP BY tanggal_transaksi
       ORDER BY tanggal_transaksi ASC;
       `,
-      [this.#periode_bulan, this.#periode_tahun],
+      params,
     );
     return rows;
   }
@@ -241,8 +268,20 @@ class Laporan {
     return rows;
   }
 
-  async getDetailBulananOutlet(limit = 10, offset = 0) {
-    const params = [this.#id_outlet, this.#periode_bulan, this.#periode_tahun];
+    async getDetailBulananOutlet(limit = 10, offset = 0, startDate = null, endDate = null) {
+    let whereClause = `MONTH(tanggal) = ? AND YEAR(tanggal) = ?`;
+    let whereClauseRiwayat = `MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ?`;
+    let params = [this.#id_outlet, this.#periode_bulan, this.#periode_tahun];
+
+    if (startDate && endDate) {
+      whereClause = `DATE(tanggal) >= ? AND DATE(tanggal) <= ?`;
+      whereClauseRiwayat = `DATE(t.tanggal) >= ? AND DATE(t.tanggal) <= ?`;
+      params = [this.#id_outlet, startDate, endDate];
+    } else if (startDate) {
+      whereClause = `DATE(tanggal) = ?`;
+      whereClauseRiwayat = `DATE(t.tanggal) = ?`;
+      params = [this.#id_outlet, startDate];
+    }
 
     const outletQuery = db.query(
       "SELECT nama_outlet FROM outlet WHERE id_outlet = ?",
@@ -255,7 +294,7 @@ class Laporan {
         COUNT(id_transaksi) AS total_transaksi, 
         SUM(total_harga) AS total_pendapatan
       FROM transaksi
-      WHERE id_outlet = ? AND MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      WHERE id_outlet = ? AND ${whereClause} AND status = 'selesai'
       `,
       params,
     );
@@ -267,7 +306,7 @@ class Laporan {
         COUNT(id_transaksi) AS jumlah_transaksi,
         SUM(total_harga) AS total_pendapatan 
       FROM transaksi
-      WHERE id_outlet = ? AND MONTH(tanggal) = ? AND YEAR(tanggal) = ? AND status = 'selesai'
+      WHERE id_outlet = ? AND ${whereClause} AND status = 'selesai'
       GROUP BY tanggal_transaksi
       ORDER BY tanggal_transaksi ASC
       `,
@@ -296,12 +335,14 @@ class Laporan {
         ) AS detail_pembelian
 
       FROM transaksi t
-      WHERE t.id_outlet = ? AND MONTH(t.tanggal) = ? AND YEAR(t.tanggal) = ? AND t.status = 'selesai'
+      WHERE t.id_outlet = ? AND ${whereClauseRiwayat} AND t.status = 'selesai'
       ORDER BY t.tanggal DESC
       LIMIT ${limit} OFFSET ${offset}
       `,
       params,
     );
+
+
 
     const [[hasilOutlet], [hasilRingkasan], [hasilHarian], [hasilRiwayat]] =
       await Promise.all([
@@ -435,14 +476,23 @@ class Laporan {
     }));
   }
 
-  async getLabaRugi(bulan, tahun, id_outlet = null) {
+  async getLabaRugi(bulan, tahun, id_outlet = null, startDate = null, endDate = null) {
     const outletTarget = id_outlet === 'all' ? null : id_outlet;
-    const isTahunan = bulan === 'all' || !bulan;
+    const useRange = startDate && endDate;
+    const useSingleDate = startDate && !endDate;
+    const isTahunan = !useRange && !useSingleDate && (bulan === 'all' || !bulan);
 
+    // Helper untuk membangun klausa WHERE berdasarkan filter tanggal aktif
     const buildQuery = (baseQuery, hasWhere = false) => {
       let q = baseQuery;
       let params = [];
-      if (isTahunan) {
+      if (useRange) {
+        q += hasWhere ? ` AND DATE(tanggal) >= ? AND DATE(tanggal) <= ?` : ` WHERE DATE(tanggal) >= ? AND DATE(tanggal) <= ?`;
+        params.push(startDate, endDate);
+      } else if (useSingleDate) {
+        q += hasWhere ? ` AND DATE(tanggal) = ?` : ` WHERE DATE(tanggal) = ?`;
+        params.push(startDate);
+      } else if (isTahunan) {
         q += hasWhere ? ` AND YEAR(tanggal) = ?` : ` WHERE YEAR(tanggal) = ?`;
         params.push(tahun);
       } else {
@@ -451,6 +501,7 @@ class Laporan {
       }
       return { query: q, params };
     };
+
 
     // 1. Total Pendapatan Seluruh Outlet
     const pendapatanAll = buildQuery(`SELECT SUM(total_harga) AS total FROM transaksi WHERE status = 'selesai'`, true);
@@ -469,14 +520,14 @@ class Laporan {
     // Proporsi (0 s.d. 1)
     const proporsi = totalPendapatanSeluruh > 0 ? (totalPendapatanTarget / totalPendapatanSeluruh) : 0;
 
-    // 2. Total HPP Pusat
+    // 2. Total HPP Pusat (kolom tanggal di tabel penggunaan_bahan_baku)
     const hppQ = buildQuery(`SELECT SUM(jumlah_digunakan * harga_bahan_baku) AS total FROM penggunaan_bahan_baku`, false);
     const [hpp] = await db.query(hppQ.query, hppQ.params);
     const hppPusat = parseFloat(hpp[0].total) || 0;
     const hppTarget = hppPusat * proporsi;
 
-    // 3. Total Pengeluaran Pusat
-    let pengeluaranQ = buildQuery(`SELECT kategori, SUM(biaya) AS total FROM pengeluaran`, false);
+    // 3. Total Pengeluaran Pusat (berdasarkan tanggal)
+    const pengeluaranQ = buildQuery(`SELECT kategori, SUM(biaya) AS total FROM pengeluaran`, false);
     pengeluaranQ.query += ` GROUP BY kategori`;
     const [pengeluaran] = await db.query(pengeluaranQ.query, pengeluaranQ.params);
     
@@ -488,22 +539,44 @@ class Laporan {
       totalPengeluaranOperasionalTarget += biayaTarget;
     });
 
-    // 4. Beban Waste
-    let wasteQ = `SELECT SUM(jumlah_stok * harga_produk) AS total FROM stok_outlet`;
-    let wParams = [];
-    let wWhere = [];
+    // 4. Beban Waste (sisa stok yang tidak terjual)
+    // Gunakan snapshot stok terakhir pada/sebelum tanggal target
+    // (sama seperti pendekatan di outlet stats)
+    let wasteEndDate;
+    if (useRange) {
+      wasteEndDate = endDate;
+    } else if (useSingleDate) {
+      wasteEndDate = startDate;
+    } else if (isTahunan) {
+      // Akhir tahun atau hari ini jika tahun berjalan
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      wasteEndDate = parseInt(tahun) >= currentYear
+        ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+        : `${tahun}-12-31`;
+    } else {
+      // Akhir bulan
+      const lastDay = new Date(tahun, bulan, 0).getDate();
+      wasteEndDate = `${tahun}-${String(bulan).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    }
+
+    let wasteQ = `
+      SELECT COALESCE(SUM(latest.jumlah_stok * latest.harga_produk), 0) AS total
+      FROM (
+        SELECT so.jumlah_stok, so.harga_produk,
+          ROW_NUMBER() OVER (PARTITION BY so.id_produk, so.id_outlet ORDER BY so.tanggal DESC, so.created_at DESC) AS rn
+        FROM stok_outlet so
+        WHERE DATE(so.tanggal) <= ?`;
+    let wParams = [wasteEndDate];
+    
     if (outletTarget) {
-      wWhere.push(`id_outlet = ?`);
+      wasteQ += ` AND so.id_outlet = ?`;
       wParams.push(outletTarget);
     }
-    if (isTahunan) {
-      wWhere.push(`YEAR(tanggal) = ?`);
-      wParams.push(tahun);
-    } else {
-      wWhere.push(`MONTH(tanggal) = ?`, `YEAR(tanggal) = ?`);
-      wParams.push(bulan, tahun);
-    }
-    if (wWhere.length > 0) wasteQ += ` WHERE ` + wWhere.join(' AND ');
+    
+    wasteQ += `
+      ) latest
+      WHERE latest.rn = 1`;
     
     const [waste] = await db.query(wasteQ, wParams);
     const totalWasteTarget = parseFloat(waste[0].total) || 0;

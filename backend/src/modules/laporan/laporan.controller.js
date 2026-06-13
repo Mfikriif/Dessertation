@@ -3,12 +3,13 @@ const ExcelJS = require("exceljs");
 
 const getLaporanBulanan = async (req, res) => {
   const { bulan, tahun } = req.params;
+  const { start_date, end_date } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
   try {
     const laporanBulanan = new Laporan(null, null, null, null, bulan, tahun);
-    const laporan = await laporanBulanan.getLaporanBulanan(limit, offset);
+    const laporan = await laporanBulanan.getLaporanBulanan(limit, offset, start_date, end_date);
 
     if (
       Number(laporan.ringkasan.total_transaksi) === 0 &&
@@ -72,13 +73,28 @@ const getLaporanTahunan = async (req, res) => {
 
 const getDetailBulanan = async (req, res) => {
   const { bulan, tahun } = req.params;
+  const { start_date, end_date } = req.query;
   try {
     const laporanInstance = new Laporan(null, null, null, null, bulan, tahun);
-    const dbResults = await laporanInstance.getDetailLaporanBulanan();
-    const jumlahHari = new Date(tahun, bulan, 0).getDate();
+    const dbResults = await laporanInstance.getDetailLaporanBulanan(start_date, end_date);
+
+    // Tentukan rentang tanggal untuk grafik
+    let dateStart, dateEnd;
+    if (start_date && end_date) {
+      dateStart = new Date(start_date);
+      dateEnd = new Date(end_date);
+    } else if (start_date) {
+      dateStart = new Date(start_date);
+      dateEnd = new Date(start_date);
+    } else {
+      // Default: seluruh bulan
+      dateStart = new Date(tahun, bulan - 1, 1);
+      dateEnd = new Date(tahun, bulan, 0);
+    }
+
     const laporan = [];
-    for (let i = 1; i <= jumlahHari; i++) {
-      const dateStr = `${tahun}-${String(bulan).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+    for (let d = new Date(dateStart); d <= dateEnd; d.setDate(d.getDate() + 1)) {
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const dataHarian = dbResults.find(
         (row) => row.tanggal_transaksi === dateStr,
       );
@@ -110,6 +126,7 @@ const getDetailBulanan = async (req, res) => {
 
 const getDetailBulananOutlet = async (req, res) => {
   const { Idoutlet, bulan, tahun } = req.params;
+  const { start_date, end_date } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
@@ -125,14 +142,29 @@ const getDetailBulananOutlet = async (req, res) => {
     const dbResults = await laporanInstance.getDetailBulananOutlet(
       limit,
       offset,
+      start_date,
+      end_date
     );
     let namaOutlet =
       dbResults.nama_outlet || "Belum Ada Transaksi / Outlet Tidak Ditemukan";
 
-    const jumlahHari = new Date(tahun, bulan, 0).getDate();
+    // Tentukan rentang tanggal untuk grafik
+    let dateStart, dateEnd;
+    if (start_date && end_date) {
+      dateStart = new Date(start_date);
+      dateEnd = new Date(end_date);
+    } else if (start_date) {
+      dateStart = new Date(start_date);
+      dateEnd = new Date(start_date);
+    } else {
+      // Default: seluruh bulan
+      dateStart = new Date(tahun, bulan - 1, 1);
+      dateEnd = new Date(tahun, bulan, 0);
+    }
+
     const grafikHarian = [];
-    for (let i = 1; i <= jumlahHari; i++) {
-      const dateStr = `${tahun}-${String(bulan).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+    for (let d = new Date(dateStart); d <= dateEnd; d.setDate(d.getDate() + 1)) {
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const dataHarian = dbResults.harian.find(
         (row) => row.tanggal_transaksi === dateStr,
       );
@@ -287,7 +319,7 @@ const getTopProdukHarian = async (req, res) => {
 
 const getLabaRugi = async (req, res) => {
   try {
-    const { bulan, tahun, id_outlet } = req.query;
+    const { bulan, tahun, id_outlet, start_date, end_date } = req.query;
 
     if (!tahun) {
       return res.status(400).json({
@@ -297,7 +329,13 @@ const getLabaRugi = async (req, res) => {
     }
 
     const laporanInstance = new Laporan();
-    const data = await laporanInstance.getLabaRugi(bulan, tahun, id_outlet);
+    const data = await laporanInstance.getLabaRugi(
+      bulan,
+      tahun,
+      id_outlet,
+      start_date || null,
+      end_date || null
+    );
 
     return res.status(200).json({
       message: "Data Laba/Rugi berhasil diambil",

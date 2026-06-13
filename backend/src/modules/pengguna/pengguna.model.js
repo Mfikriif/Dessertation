@@ -26,14 +26,6 @@ class Pengguna {
     };
   }
 
-  static async findByName(nama) {
-    const [rows] = await pool.query(
-      "SELECT * FROM pengguna WHERE nama = ? AND is_active = 1",
-      [nama],
-    );
-    return rows[0];
-  }
-
   static async findByEmail(email) {
     const [rows] = await pool.query(
       "SELECT * FROM pengguna WHERE email = ? AND is_active = 1",

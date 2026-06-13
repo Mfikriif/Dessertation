@@ -6,7 +6,7 @@ export const useLabaRugi = () => {
   const [dataLabaRugi, setDataLabaRugi] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchLabaRugi = useCallback(async (bulan, tahun, id_outlet) => {
+  const fetchLabaRugi = useCallback(async (bulan, tahun, id_outlet, startDate = null, endDate = null) => {
     try {
       setIsLoading(true);
       const params = {
@@ -14,6 +14,9 @@ export const useLabaRugi = () => {
         tahun: tahun,
         id_outlet: id_outlet || "all",
       };
+
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
 
       const response = await API.get("/laporan/laba-rugi", { params });
       if (response.data?.status === "Success") {

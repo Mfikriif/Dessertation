@@ -18,8 +18,12 @@ export const outletService = {
     return await API.delete(`/outlet/delete/${id}`);
   },
 
-  getOutletStats: async (id) => {
-    return await API.get(`/outlet/${id}/stats`);
+  getOutletStats: async (id, date) => {
+    let url = `/outlet/${id}/stats`;
+    if (date) {
+      url += `?date=${date}`;
+    }
+    return await API.get(url);
   },
 };
 

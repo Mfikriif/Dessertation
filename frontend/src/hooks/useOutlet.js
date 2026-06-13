@@ -88,9 +88,9 @@ export const useOutlet = () => {
     }
   };
 
-  const fetchOutletStats = async (id) => {
+  const fetchOutletStats = async (id, date) => {
     try {
-      const response = await outletService.getOutletStats(id);
+      const response = await outletService.getOutletStats(id, date);
       return response.data?.data;
     } catch (err) {
       console.error("Error fetching outlet stats:", err);

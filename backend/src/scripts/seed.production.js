@@ -695,8 +695,8 @@ function buildStaticSeedQueries(tahun) {
 
     for (const out of OUTLETS) {
       for (const p of PRODUK) {
-        // Sisa stok yang tidak terjual (menjadi waste) dibuat maksimal 5 pcs
-        const sisaStok = Math.floor(Math.random() * 6);
+        // Sisa stok yang tidak terjual (menjadi waste) diset 1-5 pcs
+        const sisaStok = 1 + Math.floor(Math.random() * 5);
         stokOutletRows.push(
           `('stok-${pad(stokId)}','${p.id}','${out.id}',${sisaStok},${p.harga},'${tglStr}')`,
         );
@@ -911,8 +911,8 @@ function generateStokHarianRows() {
         counter++;
         const id = `stok-${pad(counter, 3)}`;
 
-        // Sisa stok harian maksimal 5 pcs
-        const sisaStok = Math.floor(rng() * 6);
+        // Sisa stok harian diset 1-5 pcs
+        const sisaStok = 1 + Math.floor(rng() * 5);
 
         rows.push(
           `('${id}','${produk.id}','${outlet.id}',${sisaStok},${produk.harga},'${tglStr}')`,

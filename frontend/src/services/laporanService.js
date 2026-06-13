@@ -21,8 +21,8 @@ export const laporanService = {
   },
 
   // Detail bulanan (per-day breakdown for chart) — bulan & tahun only
-  getDetailBulanan: async (bulan, tahun) => {
-    return await API.get(`/laporan/bulanan-detail/${bulan}/${tahun}`);
+  getDetailBulanan: async (bulan, tahun, params = {}) => {
+    return await API.get(`/laporan/bulanan-detail/${bulan}/${tahun}`, { params });
   },
 
   // Detail bulanan per outlet (ringkasan + grafik + riwayat dengan detail_pembelian) — bulan, tahun, outlet
@@ -52,10 +52,10 @@ export const laporanService = {
   },
 
   // Export Excel Laporan Bulanan
-  exportLaporanBulanan: async (bulan, tahun, idOutlet = null) => {
+  exportLaporanBulanan: async (bulan, tahun, idOutlet = null, params = {}) => {
     let url = `/laporan/export-laporan/bulanan/${bulan}/${tahun}`;
     if (idOutlet) url += `/${idOutlet}`;
-    return await API.get(url, { responseType: "blob" });
+    return await API.get(url, { responseType: "blob", params });
   },
 
   // Export Excel Laporan Tahunan

@@ -11,6 +11,7 @@ import {
   Loader2,
   ArrowLeft,
   BarChart3,
+  PackageSearch,
 } from "lucide-react";
 import { useOutlet } from "../../../hooks/useOutlet";
 
@@ -19,6 +20,14 @@ const OutletStats = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { fetchOutletStats } = useOutlet();
+
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
 
   const [stats, setStats] = useState(null);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
@@ -29,20 +38,39 @@ const OutletStats = () => {
   useEffect(() => {
     const getStats = async () => {
       setIsStatsLoading(true);
-      const data = await fetchOutletStats(Idoutlet);
+      const data = await fetchOutletStats(Idoutlet, selectedDate);
       setStats(data);
       setIsStatsLoading(false);
     };
     if (Idoutlet) {
       getStats();
     }
-  }, [Idoutlet]);
+  }, [Idoutlet, selectedDate]);
+
+  const todayStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const isToday = selectedDate === todayStr;
 
   const tabs = [
-    { id: "stok_masuk", label: "Riwayat Stok Masuk", icon: ShoppingBag },
-    { id: "terjual", label: "Terjual Hari Ini", icon: CheckCircle2 },
-    { id: "tidak_terjual", label: "Tidak Terjual Hari Ini", icon: XCircle },
-    { id: "evaluasi_kemarin", label: "Evaluasi Kemarin", icon: PackageX },
+    {
+      id: "terjual",
+      label: isToday ? "Terjual Hari Ini" : `Terjual (${selectedDate})`,
+      icon: CheckCircle2,
+    },
+    {
+      id: "tidak_terjual",
+      label: isToday
+        ? "Riwayat Stok Hari Ini"
+        : `Riwayat Stok (${selectedDate})`,
+      icon: PackageSearch,
+    },
+    {
+      id: "evaluasi_kemarin",
+      label: isToday ? "Evaluasi Kemarin" : "Sehari Sebelumnya",
+      icon: PackageX,
+    },
   ];
 
   return (
@@ -71,6 +99,16 @@ const OutletStats = () => {
             </p>
           </div>
         </div>
+
+        <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
+          <Calendar className="w-5 h-5 text-gray-500 ml-2" />
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border-none bg-transparent text-sm font-semibold text-gray-800 focus:ring-0 outline-none cursor-pointer"
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-8">
@@ -93,28 +131,28 @@ const OutletStats = () => {
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
-                  label="Hari Ini"
+                  label={isToday ? "Hari Ini" : "Tanggal Terpilih"}
                   value={stats.terjual_hari_ini}
                   icon={TrendingUp}
                   color="emerald"
                   subtitle="produk terjual"
                 />
                 <StatCard
-                  label="Kemarin"
+                  label={isToday ? "Kemarin" : "Sehari Sebelumnya"}
                   value={stats.terjual_kemarin}
                   icon={Calendar}
                   color="blue"
                   subtitle="produk terjual"
                 />
                 <StatCard
-                  label="2 Hari Lalu"
+                  label={isToday ? "2 Hari Lalu" : "2 Hari Sebelumnya"}
                   value={stats.terjual_2_hari_lalu}
                   icon={Calendar}
                   color="indigo"
                   subtitle="produk terjual"
                 />
                 <StatCard
-                  label="3 Hari Lalu"
+                  label={isToday ? "3 Hari Lalu" : "3 Hari Sebelumnya"}
                   value={stats.terjual_3_hari_lalu}
                   icon={Calendar}
                   color="violet"
@@ -142,14 +180,20 @@ const OutletStats = () => {
                   subtitle="Total stok tersisa"
                 />
                 <StatCard
-                  label="Zero Sales Hari Ini"
+                  label={
+                    isToday
+                      ? "Zero Sales Hari Ini"
+                      : "Zero Sales (Tgl Terpilih)"
+                  }
                   value={stats.jenis_produk_tidak_terjual}
                   icon={AlertCircle}
                   color="rose"
                   subtitle="Varian tanpa penjualan"
                 />
                 <StatCard
-                  label="Zero Sales Kemarin"
+                  label={
+                    isToday ? "Zero Sales Kemarin" : "Zero Sales (Sblmnya)"
+                  }
                   value={stats.jenis_produk_tidak_terjual_kemarin}
                   icon={PackageX}
                   color="orange"
@@ -206,18 +250,15 @@ const OutletStats = () => {
 
             {/* Tab Content */}
             <div className="min-h-[300px] pt-4">
-              {activeTab === "stok_masuk" && (
-                <StokMasukTable items={stats.daftar_stok_masuk || []} />
-              )}
               {activeTab === "terjual" && (
                 <SoldProductsTable
                   items={stats.daftar_produk_terjual_hari_ini || []}
                 />
               )}
               {activeTab === "tidak_terjual" && (
-                <UnsoldProductsTable
+                <RekapHarianTable
                   items={stats.daftar_produk_tidak_terjual_hari_ini || []}
-                  emptyMsg="Semua produk terjual hari ini!"
+                  emptyMsg="Tidak ada data rekap produk untuk tanggal ini."
                 />
               )}
               {activeTab === "evaluasi_kemarin" && (
@@ -329,12 +370,12 @@ const SoldProductsTable = ({ items }) => {
   );
 };
 
-const UnsoldProductsTable = ({ items, emptyMsg }) => {
+const RekapHarianTable = ({ items, emptyMsg }) => {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3 border-2 border-dashed border-gray-100 rounded-2xl">
         <div className="p-4 bg-emerald-50 rounded-full">
-          <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+          <PackageSearch className="w-8 h-8 text-emerald-400" />
         </div>
         <p className="text-sm font-medium">{emptyMsg}</p>
       </div>
@@ -349,7 +390,13 @@ const UnsoldProductsTable = ({ items, emptyMsg }) => {
             <th className="px-5 py-4">Nama Produk</th>
             <th className="px-5 py-4">Kategori</th>
             <th className="px-5 py-4 text-right">Harga</th>
-            <th className="px-5 py-4 text-right">Sisa Stok</th>
+            <th className="px-5 py-4 text-right border-l border-gray-100">
+              Total Stok Masuk
+            </th>
+            <th className="px-5 py-4 text-right">Terjual</th>
+            <th className="px-5 py-4 text-right border-l border-gray-100">
+              Sisa Stok
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50 bg-white">
@@ -370,7 +417,13 @@ const UnsoldProductsTable = ({ items, emptyMsg }) => {
               <td className="px-5 py-4 text-right text-gray-500 font-medium tabular-nums">
                 Rp {item.harga.toLocaleString("id-ID")}
               </td>
-              <td className="px-5 py-4 text-right">
+              <td className="px-5 py-4 text-right text-gray-900 font-medium tabular-nums border-l border-gray-50 bg-gray-50/30">
+                {item.stok_masuk}
+              </td>
+              <td className="px-5 py-4 text-right text-indigo-600 font-bold tabular-nums bg-indigo-50/20">
+                {item.terjual}
+              </td>
+              <td className="px-5 py-4 text-right border-l border-gray-50 bg-gray-50/30">
                 <span
                   className={`text-sm font-bold px-3 py-1 rounded-lg ${
                     item.sisa_stok === 0
@@ -461,58 +514,6 @@ const EvaluasiKemarinTable = ({ items }) => {
   );
 };
 
-const StokMasukTable = ({ items }) => {
-  if (items.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3 border-2 border-dashed border-gray-100 rounded-2xl">
-        <div className="p-4 bg-blue-50 rounded-full">
-          <ShoppingBag className="w-8 h-8 text-blue-400" />
-        </div>
-        <p className="text-sm font-medium">Tidak ada data stok masuk.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm">
-      <table className="w-full text-left text-sm">
-        <thead className="text-[11px] text-gray-400 font-bold tracking-wider uppercase bg-gray-50/50 border-b border-gray-50">
-          <tr>
-            <th className="px-5 py-4 w-16">No</th>
-            <th className="px-5 py-4">Nama Produk</th>
-            <th className="px-5 py-4">Kategori</th>
-            <th className="px-5 py-4 text-right">Harga</th>
-            <th className="px-5 py-4 text-right">Total Stok Masuk</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50 bg-white">
-          {items.map((item, idx) => (
-            <tr
-              key={item.id_produk}
-              className="hover:bg-gray-50/50 transition-colors group"
-            >
-              <td className="px-5 py-4 text-gray-500 text-sm">{idx + 1}.</td>
-              <td className="px-5 py-4 text-gray-900 font-medium group-hover:text-black transition-colors">
-                {item.nama_produk}
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium border border-gray-200/60">
-                  {item.nama_kategori}
-                </span>
-              </td>
-              <td className="px-5 py-4 text-right text-gray-500 font-medium tabular-nums">
-                Rp {item.harga.toLocaleString("id-ID")}
-              </td>
-              <td className="px-5 py-4 text-right">
-                <span className="text-sm font-bold text-gray-900">
-                  {item.total_stok}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
+
 
 export default OutletStats;

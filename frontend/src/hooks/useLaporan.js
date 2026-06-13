@@ -58,7 +58,7 @@ export const useLaporan = () => {
 
   // Fetch laporan bulanan (bulan + tahun only, no outlet)
   // Uses /bulanan for ringkasan+riwayat, /bulanan-detail for chart
-  const fetchLaporanBulanan = useCallback(async (bulan, tahun, page = 1, limit = 7) => {
+  const fetchLaporanBulanan = useCallback(async (bulan, tahun, page = 1, limit = 7, start_date = "", end_date = "") => {
     try {
       setIsLoading(true);
       setError(null);
@@ -66,7 +66,7 @@ export const useLaporan = () => {
 
       // Fetch summary + riwayat (handle 404 independently)
       try {
-        const laporanRes = await laporanService.getLaporanBulanan(bulan, tahun, { page, limit });
+        const laporanRes = await laporanService.getLaporanBulanan(bulan, tahun, { page, limit, start_date, end_date });
         const resData = laporanRes.data || {};
         const laporanData = resData.laporan || {};
 
@@ -97,7 +97,7 @@ export const useLaporan = () => {
 
       // Fetch chart detail (handle 404 independently)
       try {
-        const detailRes = await laporanService.getDetailBulanan(bulan, tahun);
+        const detailRes = await laporanService.getDetailBulanan(bulan, tahun, { start_date, end_date });
         setChartDetail(detailRes.data?.laporan || []);
       } catch (err) {
         setChartDetail([]);
@@ -113,7 +113,7 @@ export const useLaporan = () => {
   // Fetch laporan bulanan per outlet (bulan + tahun + outlet)
   // Uses /bulanan-detail/outlet which returns ringkasan, grafik, riwayat
   const fetchLaporanBulananOutlet = useCallback(
-    async (bulan, tahun, idOutlet, page = 1, limit = 7) => {
+    async (bulan, tahun, idOutlet, page = 1, limit = 7, start_date = "", end_date = "") => {
       try {
         setIsLoading(true);
         setError(null);
@@ -122,7 +122,7 @@ export const useLaporan = () => {
           bulan,
           tahun,
           idOutlet,
-          { page, limit },
+          { page, limit, start_date, end_date },
         );
 
         const data = response.data || {};
@@ -246,14 +246,14 @@ export const useLaporan = () => {
     }
   }, []);
 
-  const exportExcel = useCallback(async (bulan, tahun, idOutlet) => {
+  const exportExcel = useCallback(async (bulan, tahun, idOutlet, start_date = "", end_date = "") => {
     try {
       setIsLoading(true);
       let response;
       if (bulan === "") {
-        response = await laporanService.exportLaporanTahunan(tahun, idOutlet);
+        response = await laporanService.exportLaporanTahunan(tahun, idOutlet, { start_date, end_date });
       } else {
-        response = await laporanService.exportLaporanBulanan(bulan, tahun, idOutlet);
+        response = await laporanService.exportLaporanBulanan(bulan, tahun, idOutlet, { start_date, end_date });
       }
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
